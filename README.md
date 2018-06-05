@@ -9,6 +9,38 @@ In order to compile VeOS you'll need the following:
 - ld
 - grub (in order to make it bootable)
 
+## Instructions
+This should install everything needed to get started from a clean ubuntu 16.04 installation
+
+
+Install rustup
+
+`curl https://sh.rustup.rs -sSf | sh`
+
+Source the new rust environment variables
+
+`source $HOME/.cargo/env`
+
+Clone the repository and cd into the folder
+
+`git clone https://github.com/aeleos/VeOS && cd VeOS`
+
+Tell rustup to use the nightly
+
+`rustup override add nightly`
+
+Install xargo for compiling the toolchain
+
+`cargo install xargo`
+
+Add the rust-src component
+
+`rustup component add rust-src`
+
+Install some dependencies
+
+`sudo apt install qemu xorriso nasm grub-pc-bin`
+
 Then you can
 - run `make` to create the folder structure of the OS at `target/`.
 - run `make iso` to create a bootable image at `image.iso`.
