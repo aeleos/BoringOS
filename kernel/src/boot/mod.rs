@@ -91,44 +91,42 @@ impl Iterator for MemoryMapIterator {
                     self.current_entry = get_next_entry(self);
 
                     Some(current_entry)
-                } else {
+                } else if self.to_exclude[self.exclude_index].is_contained_in(current_entry) {
                     // Handle the exclude areas.
 
-                    if self.to_exclude[self.exclude_index].is_contained_in(current_entry) {
-                        // The area to exclude is contained in the current free entry.
-                        let (entry_before, entry_after) = {
-                            let exclude_area = &self.to_exclude[self.exclude_index];
+                    // The area to exclude is contained in the current free entry.
+                    let (entry_before, entry_after) = {
+                        let exclude_area = &self.to_exclude[self.exclude_index];
 
-                            (
-                                MemoryArea::new(
-                                    current_entry.start_address(),
-                                    exclude_area.start_address() - current_entry.start_address()
-                                ),
-                                MemoryArea::new(
-                                    exclude_area.end_address(),
-                                    current_entry.end_address() - exclude_area.end_address()
-                                )
+                        (
+                            MemoryArea::new(
+                                current_entry.start_address(),
+                                exclude_area.start_address() - current_entry.start_address()
+                            ),
+                            MemoryArea::new(
+                                exclude_area.end_address(),
+                                current_entry.end_address() - exclude_area.end_address()
                             )
-                        };
+                        )
+                    };
 
-                        self.exclude_index += 1;
+                    self.exclude_index += 1;
 
-                        if entry_after.end_address() == entry_after.start_address() {
-                            self.current_entry = get_next_entry(self);
-                        } else {
-                            self.current_entry = Some(entry_after);
-                        }
-
-                        if entry_before.end_address() == entry_before.start_address() {
-                            continue;
-                        } else {
-                            Some(entry_before)
-                        }
-                    } else {
+                    if entry_after.end_address() == entry_after.start_address() {
                         self.current_entry = get_next_entry(self);
-
-                        Some(current_entry)
+                    } else {
+                        self.current_entry = Some(entry_after);
                     }
+
+                    if entry_before.end_address() == entry_before.start_address() {
+                        continue;
+                    } else {
+                        Some(entry_before)
+                    }
+                } else {
+                    self.current_entry = get_next_entry(self);
+
+                    Some(current_entry)
                 }
             } else {
                 None
@@ -159,8 +157,8 @@ pub fn init(magic_number: u32, information_structure_address: usize) {
 fn set_boot_method(magic_number: u32) {
     unsafe {
         BOOT_METHOD = match magic_number {
-            0x36d76289 => BootMethod::Multiboot2,
-            0x2badb002 => BootMethod::Multiboot,
+            0x36d7_6289 => BootMethod::Multiboot2,
+            0x2bad_b002 => BootMethod::Multiboot,
             _ => BootMethod::Unknown
         }
     }

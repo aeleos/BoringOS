@@ -1,5 +1,5 @@
-MKINITRAMFS := mkinitramfs/target/release/mkinitramfs
-BUILD_DIRS += mkinitramfs/target
+MKINITRAMFS := target/release/mkinitramfs
+BUILD_DIRS += target
 FMT_DIRS += mkinitramfs
 
 $(TARGET_DIR)/boot/initramfs: $(MKINITRAMFS) $(TARGET_DIR)/conf/mkinitramfs $(patsubst %,$(TARGET_DIR)%,$(INITRAMFS_FILES))

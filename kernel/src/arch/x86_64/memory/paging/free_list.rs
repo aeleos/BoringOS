@@ -75,8 +75,7 @@ impl FreeList {
             let mut entry_address = self.first_entry.unwrap();
             let mut entry: FreeListEntry = current_page_table.read_from_physical(entry_address);
 
-            while !entry.next_entry.is_none()
-                && entry.next_entry.unwrap() < mem_area.start_address()
+            while entry.next_entry.is_some() && entry.next_entry.unwrap() < mem_area.start_address()
             {
                 entry_address = entry.next_entry.unwrap();
                 entry = current_page_table.read_from_physical(entry_address);
@@ -91,7 +90,7 @@ impl FreeList {
             // The previous and the new entry need to be merged.
             let front_merge = entry_address + entry.length == mem_area.start_address();
             // The new and the following entry need to be merged.
-            let back_merge = !next_entry.is_none() && mem_area.end_address() == next_entry.unwrap();
+            let back_merge = next_entry.is_some() && mem_area.end_address() == next_entry.unwrap();
 
             if front_merge && back_merge {
                 let next_entry =
@@ -133,8 +132,7 @@ impl FreeList {
             // If the first entry is to be removed.
             self.first_entry = entry.next_entry;
         } else {
-            while !entry.next_entry.is_none()
-                && entry.next_entry.unwrap() < mem_area.start_address()
+            while entry.next_entry.is_some() && entry.next_entry.unwrap() < mem_area.start_address()
             {
                 entry_address = entry.next_entry.unwrap();
                 entry = current_page_table.read_from_physical(entry_address);
@@ -142,7 +140,7 @@ impl FreeList {
             // Entry is now the entry after which the entry should be deleted.
 
             let next_entry = entry.next_entry;
-            if !next_entry.is_none() && next_entry.unwrap() == mem_area.start_address() {
+            if next_entry.is_some() && next_entry.unwrap() == mem_area.start_address() {
                 let current_entry: FreeListEntry =
                     current_page_table.read_from_physical(mem_area.start_address());
 
@@ -195,7 +193,7 @@ impl<'a> Iterator for FreeListIterator<'a> {
     type Item = MemoryArea<PhysicalAddress>;
 
     fn next(&mut self) -> Option<MemoryArea<PhysicalAddress>> {
-        if !self.next_address.is_none() {
+        if self.next_address.is_some() {
             let mut current_page_table = CURRENT_PAGE_TABLE.lock();
             let address = self.next_address.unwrap();
             let entry: FreeListEntry = current_page_table.read_from_physical(address);

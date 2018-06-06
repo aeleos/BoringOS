@@ -24,9 +24,3 @@ features = ["spin_no_std"]
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86_64 = "0.1"
-
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"

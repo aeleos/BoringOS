@@ -233,6 +233,7 @@ impl fmt::Debug for Page {
 }
 
 /// Represents a page frame.
+#[derive(Clone, Copy)]
 pub struct PageFrame(PhysicalAddress);
 
 impl PageFrame {

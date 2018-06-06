@@ -10,7 +10,7 @@ use x86_64::instructions::interrupts;
 use x86_64::instructions::port::{inb, outb};
 
 /// The physical base address of the memory mapped LAPIC.
-const LAPIC_BASE: PhysicalAddress = PhysicalAddress::from_const(0xfee00000);
+const LAPIC_BASE: PhysicalAddress = PhysicalAddress::from_const(0xfee0_0000);
 
 /// The offset for the CMCI interrupt LVT register.
 const CMCI_INTERRUPT: usize = 0x2f0;
@@ -64,7 +64,7 @@ const DESTINATION_FORMAT_REGISTER: usize = 0xe0;
 /// The amount of LAPIC timer ticks per milliseconds. Measured at runtime.
 ///
 /// This value is initialized to the value that qemu uses.
-static mut TICKS_PER_MS: u32 = 1000000;
+static mut TICKS_PER_MS: u32 = 1_000_000;
 
 /// Initializes the LAPIC.
 pub fn init() {

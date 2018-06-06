@@ -20,6 +20,6 @@ pub fn get_vga_info() -> vga_buffer::Info {
     vga_buffer::Info {
         height: 25,
         width: 80,
-        address: VirtualAddress::from_usize(0xffff8000000b8000)
+        address: VirtualAddress::from_usize(0xffff_8000_000b_8000)
     }
 }

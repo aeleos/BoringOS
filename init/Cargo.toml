@@ -12,9 +12,3 @@ crate-type = ["staticlib"]
 [dependencies]
 rlibc = "1.0"
 veos_std = { path = "../std", version = "0.1" }
-
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"

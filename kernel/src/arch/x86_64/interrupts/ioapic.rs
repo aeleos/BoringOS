@@ -7,7 +7,7 @@ use memory::{PhysicalAddress, VirtualAddress, NO_CACHE, READABLE, WRITABLE};
 use x86_64::instructions::port::outb;
 
 /// The physical base address of the memory mapped I/O APIC.
-const IO_APIC_BASE: PhysicalAddress = PhysicalAddress::from_const(0xfec00000);
+const IO_APIC_BASE: PhysicalAddress = PhysicalAddress::from_const(0xfec0_0000);
 
 /// Initializes the I/O APIC.
 pub fn init() {
@@ -25,9 +25,9 @@ pub fn init() {
         outb(0xa1, 0xff);
     }
 
-    for i in 0..16 {
+    for (i, irq_num) in IRQ_INTERRUPT_NUMS.iter().enumerate().take(16) {
         let mut irq = IORedirectionEntry::new();
-        irq.set_vector(IRQ_INTERRUPT_NUMS[i]);
+        irq.set_vector(*irq_num);
         set_irq(i as u8, irq);
     }
 
@@ -71,6 +71,7 @@ fn get_ioapic_base() -> VirtualAddress {
 
 /// Represents an entry in the I/O APIC redirection table.
 #[repr(C)]
+#[derive(Copy, Clone)]
 struct IORedirectionEntry(u64);
 
 bitflags! {

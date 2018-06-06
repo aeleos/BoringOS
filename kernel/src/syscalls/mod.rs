@@ -138,7 +138,7 @@ fn sleep(seconds: usize, nanoseconds: usize) -> isize {
     let seconds = seconds as u64;
     let nanoseconds = nanoseconds as u32;
     let duration = if seconds
-        .checked_add((nanoseconds / 1000_000_000).into())
+        .checked_add((nanoseconds / 1_000_000_000).into())
         .is_none()
     {
         // The wake time overflowed

@@ -69,12 +69,10 @@ impl Node {
                 } else {
                     None
                 }
+            } else if max_address > aligned_address + size {
+                Some(0)
             } else {
-                if max_address > aligned_address + size {
-                    Some(0)
-                } else {
-                    None
-                }
+                None
             }
         } else {
             None

@@ -23,9 +23,7 @@ const FORCE: bool = false;
 const OVERWRITE: bool = true;
 
 /// The magic number at the beginning of the output file.
-const MAGIC: [u8; 8] = [
-    'V' as u8, 'e' as u8, 'O' as u8, 'S' as u8, 'i' as u8, 'r' as u8, 'f' as u8, 's' as u8,
-];
+const MAGIC: [u8; 8] = [b'V', b'e', b'O', b'S', b'i', b'r', b'f', b's'];
 
 /// The offset at which the file metadata begins.
 const FILE_METADATA_OFFSET: usize = size_of::<[u8; 8]>() + size_of::<u64>();
@@ -133,11 +131,12 @@ fn write_file(file: &mut File, file_num: usize, file_name: &str, file_path: &Pat
     )).unwrap_or_exit(COULD_NOT_SEEK_TARGET);
     file.write_u64::<BigEndian>(content_position)
         .unwrap_or_exit(COULD_NOT_WRITE_TO_TARGET);
-    file.write_u64::<BigEndian>(source_file
-        .metadata()
-        .unwrap_or_exit(&format!("Could not read length of {}", file_path.display()))
-        .len() as u64)
-        .unwrap_or_exit(COULD_NOT_WRITE_TO_TARGET);
+    file.write_u64::<BigEndian>(
+        source_file
+            .metadata()
+            .unwrap_or_exit(&format!("Could not read length of {}", file_path.display()))
+            .len() as u64,
+    ).unwrap_or_exit(COULD_NOT_WRITE_TO_TARGET);
 }
 
 /// Writes the header information to the file.

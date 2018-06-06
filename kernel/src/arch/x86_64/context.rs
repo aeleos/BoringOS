@@ -37,10 +37,10 @@ impl arch::Context for Context {
 
         let stack_frame = ExceptionStackFrame {
             instruction_pointer: ::x86_64::VirtualAddress(function.as_usize()),
-            code_segment: USER_CODE_SEGMENT.0 as u64,
+            code_segment: u64::from(USER_CODE_SEGMENT.0),
             cpu_flags: (Flags::IF | Flags::A1).bits() as u64,
             stack_pointer: ::x86_64::VirtualAddress(stack_pointer.as_usize()),
-            stack_segment: USER_DATA_SEGMENT.0 as u64
+            stack_segment: u64::from(USER_DATA_SEGMENT.0)
         };
 
         unsafe {

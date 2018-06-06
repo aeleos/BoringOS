@@ -18,10 +18,10 @@ use x86_64::registers::control_regs;
 ///
 /// Note that this is only valid if the level 4 table is mapped recursively on
 /// the last entry.
-const L4_TABLE: *mut PageTable<Level4> = 0xfffffffffffff000 as *mut PageTable<Level4>;
+const L4_TABLE: *mut PageTable<Level4> = 0xffff_ffff_ffff_f000 as *mut PageTable<Level4>;
 
 /// The base address for all temporary addresses.
-const TEMPORARY_ADDRESS_BASE: VirtualAddress = VirtualAddress::from_const(0xffffffffffc00000);
+const TEMPORARY_ADDRESS_BASE: VirtualAddress = VirtualAddress::from_const(0xffff_ffff_ffc0_0000);
 
 /// The method to access the current page table.
 pub static CURRENT_PAGE_TABLE: CurrentPageTableLock =
@@ -239,6 +239,6 @@ impl CurrentPageTable {
 fn page_frame_hash(frame: &PageFrame) -> usize {
     // UNOPTIMIZED: Possibly use a better hash algorithm here?
     let mut address = frame.get_address().as_usize() >> 12;
-    address *= 101489;
+    address *= 101_489;
     address % 512
 }

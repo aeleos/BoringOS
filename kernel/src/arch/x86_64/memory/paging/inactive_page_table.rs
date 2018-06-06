@@ -13,7 +13,7 @@ use sync::PreemptionState;
 use x86_64::registers::control_regs::cr3;
 
 /// The reference to the place where the level 4 table will be mapped.
-const L4_TABLE: *mut PageTable<Level4> = 0xffffffffffffd000 as *mut PageTable<Level4>;
+const L4_TABLE: *mut PageTable<Level4> = 0xffff_ffff_ffff_d000 as *mut PageTable<Level4>;
 
 /// Represents a currently inactive page table that needs to be modified.
 pub struct InactivePageTable {

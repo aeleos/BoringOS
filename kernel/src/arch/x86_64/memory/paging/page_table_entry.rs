@@ -8,7 +8,7 @@ use memory::{Address, PhysicalAddress};
 use sync::{cpu_relax, disable_preemption, restore_preemption_state, PreemptionState};
 
 /// Serves as a mask for the physical address in a page table entry.
-const PHYSICAL_ADDRESS_MASK: usize = 0xffffffffff << 12;
+const PHYSICAL_ADDRESS_MASK: usize = 0xff_ffff_ffff << 12;
 
 /// Represents a page table entry.
 #[repr(C)]
@@ -172,10 +172,10 @@ mod tests {
     #[test]
     fn test_points_to() {
         let mut entry = PageTableEntry::new();
-        entry.set_address(0xdeadb000);
+        entry.set_address(0xdead_b000);
         assert_eq!(entry.points_to(), None);
         entry.set_flags(PRESENT);
-        assert_eq!(entry.points_to(), Some(0xdeadb000));
+        assert_eq!(entry.points_to(), Some(0xdead_b000));
     }
 
     /// Tests that unaligned addresses panic.
@@ -183,7 +183,7 @@ mod tests {
     #[should_panic]
     fn test_unaligned_address() {
         let mut entry = PageTableEntry::new();
-        entry.set_address(0xdeadbeef);
+        entry.set_address(0xdead_beef);
     }
 
     /// Tests that overflowing addresses panic.
@@ -191,7 +191,7 @@ mod tests {
     #[should_panic]
     fn test_address_overflow() {
         let mut entry = PageTableEntry::new();
-        entry.set_address(0xcafebabedeadb000);
+        entry.set_address(0xcafe_babe_dead_b000);
     }
 
     /// Tests that the flags field works as expected.
@@ -208,9 +208,9 @@ mod tests {
     fn test_flag_change() {
         let mut entry = PageTableEntry::new();
         let flags = PRESENT | DIRTY | USER_ACCESSIBLE | WRITABLE | NO_EXECUTE;
-        entry.set_address(0xcafeb000);
+        entry.set_address(0xcafe_b000);
         entry.set_flags(flags);
-        assert_eq!(entry.points_to(), Some(0xcafeb000));
+        assert_eq!(entry.points_to(), Some(0xcafe_b000));
     }
 
     /// Tests that the binary representation is as expected.
@@ -219,10 +219,10 @@ mod tests {
         let mut entry = PageTableEntry::new();
         let flags = PRESENT | DIRTY | USER_ACCESSIBLE | WRITABLE | NO_EXECUTE;
         entry.set_flags(flags);
-        entry.set_address(0xdeadb000);
+        entry.set_address(0xdead_b000);
         assert_eq!(
             entry.0,
-            0xdeadb000 | (1 << 0) | (1 << 6) | (1 << 2) | (1 << 1) | (1 << 63)
+            0xdead_b000 | (1 << 0) | (1 << 6) | (1 << 2) | (1 << 1) | (1 << 63)
         );
     }
 }

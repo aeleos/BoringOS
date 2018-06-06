@@ -31,6 +31,9 @@ pub fn get_pid() -> u64 {
 
 /// Creates a new process from the given executable.
 pub fn exec(name: &str) -> Result<u64, ProcessError> {
+    // An intermediate pointer is required here in order to make sure that *const str pointer
+    // is aligned, since *const usize has a more string alignment.
+    // See https://wiki.sei.cmu.edu/confluence/display/c/EXP36-C.+Do+not+cast+pointers+into+more+strictly+aligned+pointer+types
     let name_ptr = name as *const str as *const usize as u64;
     let result = unsafe { syscall!(EXEC_SYSCALL_NUM, name_ptr, name.len() as u64) as i64 };
     if result < 0 {

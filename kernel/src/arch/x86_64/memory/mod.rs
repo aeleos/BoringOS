@@ -8,17 +8,17 @@ mod paging;
 pub use self::paging::get_free_memory_size;
 
 /// The maximum address of the lower part of the virtual address space.
-const VIRTUAL_LOW_MAX_ADDRESS: VirtualAddress = VirtualAddress::from_const(0x00007fffffffffff);
+const VIRTUAL_LOW_MAX_ADDRESS: VirtualAddress = VirtualAddress::from_const(0x0000_7fff_ffff_ffff);
 
 /// The minimum address of the higher part of the virtual address space.
-const VIRTUAL_HIGH_MIN_ADDRESS: VirtualAddress = VirtualAddress::from_const(0xffff800000000000);
+const VIRTUAL_HIGH_MIN_ADDRESS: VirtualAddress = VirtualAddress::from_const(0xffff_8000_0000_0000);
 
 /// The top of the stack after the kernel has been remapped.
-pub const FINAL_STACK_TOP: VirtualAddress = VirtualAddress::from_const(0xfffffe8000000000);
+pub const FINAL_STACK_TOP: VirtualAddress = VirtualAddress::from_const(0xffff_fe80_0000_0000);
 
 /// The start address for the double fault stack area.
 pub const DOUBLE_FAULT_STACK_AREA_BASE: VirtualAddress =
-    VirtualAddress::from_const(0xfffffd0000000000);
+    VirtualAddress::from_const(0xffff_fd00_0000_0000);
 
 /// The distance between two double fault stack tops.
 pub const DOUBLE_FAULT_STACK_OFFSET: usize = 0x2000;
@@ -27,25 +27,26 @@ pub const DOUBLE_FAULT_STACK_OFFSET: usize = 0x2000;
 pub const DOUBLE_FAULT_STACK_MAX_SIZE: usize = 0x1000;
 
 /// The base address of the kernel stack area.
-pub const KERNEL_STACK_AREA_BASE: VirtualAddress = VirtualAddress::from_const(0xfffffe0000000000);
+pub const KERNEL_STACK_AREA_BASE: VirtualAddress =
+    VirtualAddress::from_const(0xffff_fe00_0000_0000);
 
 /// The offset of the start addresses of thread kernel stacks.
-pub const KERNEL_STACK_OFFSET: usize = 0x400000;
+pub const KERNEL_STACK_OFFSET: usize = 0x40_0000;
 
 /// The maximum size of a thread kernel stack.
-pub const KERNEL_STACK_MAX_SIZE: usize = 0x200000;
+pub const KERNEL_STACK_MAX_SIZE: usize = 0x20_0000;
 
 /// The base address of the process stack area.
-pub const USER_STACK_AREA_BASE: VirtualAddress = VirtualAddress::from_const(0x00007f8000000000);
+pub const USER_STACK_AREA_BASE: VirtualAddress = VirtualAddress::from_const(0x0000_7f80_0000_0000);
 
 /// The offset of the start addresses of thread stacks.
-pub const USER_STACK_OFFSET: usize = 0x400000;
+pub const USER_STACK_OFFSET: usize = 0x40_0000;
 
 /// The maximum size of a thread stack.
-pub const USER_STACK_MAX_SIZE: usize = 0x200000;
+pub const USER_STACK_MAX_SIZE: usize = 0x20_0000;
 
 /// The start address of the heap.
-pub const HEAP_START: VirtualAddress = VirtualAddress::from_const(0xfffffd8000000000);
+pub const HEAP_START: VirtualAddress = VirtualAddress::from_const(0xffff_fd80_0000_0000);
 
 /// The maximum size of the heap.
 ///
@@ -57,7 +58,7 @@ pub const PAGE_SIZE: usize = 0x1000;
 
 /// The area where the initramfs will be mapped.
 const INITRAMFS_MAP_AREA_START: VirtualAddress =
-    VirtualAddress::from_const(0xffff800000000000 + 512 * 512 * 512);
+    VirtualAddress::from_const(0xffff_8000_0000_0000 + 512 * 512 * 512);
 
 /// The run-time memory area of the initramfs.
 static mut INITRAMFS_AREA: MemoryArea<VirtualAddress> = MemoryArea::const_default();

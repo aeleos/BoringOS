@@ -20,6 +20,7 @@
 //! This crate contains all of the rust code for the VeOS kernel.
 //!
 //! The kernel is aiming to be a microkernel.
+#![cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
 
 extern crate rlibc;
 extern crate volatile;

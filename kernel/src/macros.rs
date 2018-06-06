@@ -60,7 +60,7 @@ macro_rules! from_raw_str {
 #[cfg(target_arch = "x86_64")]
 macro_rules! to_virtual {
     ($address:expr) => {{
-        const KERNEL_OFFSET: usize = 0xffff800000000000;
+        const KERNEL_OFFSET: usize = 0xffff_8000_0000_0000;
         $address as usize + KERNEL_OFFSET
     }};
 }
