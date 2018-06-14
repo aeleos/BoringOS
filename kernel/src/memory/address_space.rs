@@ -6,7 +6,7 @@ use alloc::Vec;
 use arch::{self, Architecture};
 use core::mem::size_of_val;
 use core::slice;
-use memory::{MemoryArea, PAGE_SIZE, USER_ACCESSIBLE};
+use memory::{MemoryArea, PAGE_SIZE};
 use multitasking::{Stack, ThreadID};
 
 /// Represents an address space
@@ -14,7 +14,7 @@ pub struct AddressSpace {
     /// The segments that are part of the address space.
     segments: Vec<Segment>,
     /// The address space manager.
-    manager: <arch::Current as Architecture>::AddressSpaceManager
+    manager: <arch::Current as Architecture>::AddressSpaceManager,
 }
 
 impl Drop for AddressSpace {
@@ -31,7 +31,7 @@ impl AddressSpace {
         AddressSpace {
             segments: Vec::new(),
             manager:
-                <<arch::Current as Architecture>::AddressSpaceManager as AddressSpaceManager>::new()
+                <<arch::Current as Architecture>::AddressSpaceManager as AddressSpaceManager>::new(),
         }
     }
 
@@ -41,7 +41,7 @@ impl AddressSpace {
             segments: Vec::new(),
             manager:
                 <<arch::Current as Architecture>::AddressSpaceManager as AddressSpaceManager>::idle(
-                )
+                ),
         }
     }
 
@@ -55,7 +55,7 @@ impl AddressSpace {
             }
         }
 
-        if segment_to_add.flags.contains(USER_ACCESSIBLE)
+        if segment_to_add.flags.contains(PageFlags::USER_ACCESSIBLE)
             && !(arch::Current::is_userspace_address(segment_to_add.start_address())
                 && arch::Current::is_userspace_address(segment_to_add.end_address()))
         {
@@ -169,7 +169,7 @@ pub enum SegmentType {
     /// The content of the segment was read from a file.
     FromFile,
     /// The content of the segment is only in memory.
-    MemoryOnly
+    MemoryOnly,
 }
 
 /// Represents a segment of memory in the address space.
@@ -180,7 +180,7 @@ pub struct Segment {
     /// The flags this segment is mapped with.
     flags: PageFlags,
     /// The type of the segment.
-    segment_type: SegmentType
+    segment_type: SegmentType,
 }
 
 impl Segment {
@@ -188,12 +188,12 @@ impl Segment {
     pub fn new(
         memory_area: MemoryArea<VirtualAddress>,
         flags: PageFlags,
-        segment_type: SegmentType
+        segment_type: SegmentType,
     ) -> Segment {
         Segment {
             memory_area,
             flags,
-            segment_type
+            segment_type,
         }
     }
 
@@ -225,10 +225,10 @@ impl Segment {
                 match self.segment_type {
                     SegmentType::FromFile => {
                         manager.unmap_page(self.start_address() + page_num * PAGE_SIZE)
-                    },
+                    }
                     SegmentType::MemoryOnly => {
                         manager.unmap_page_unchecked(self.start_address() + page_num * PAGE_SIZE)
-                    },
+                    }
                 }
             }
         }

@@ -7,27 +7,27 @@
 /// `&'static str`.
 /// Optionally if the length is known, the process can be sped up, by passing
 /// it.
+
 #[macro_export]
 macro_rules! from_c_str {
     ($address:expr, $length:expr) => {{
         use core::slice;
         use core::str;
         unsafe {
-            let null_value: u8 = *($address + $length).as_ptr();
-            assert_eq!(null_value, 0);
+            assert_eq!(*(($address + $length) as *const u8), 0);
         }
         if $length > 0 {
             let bytes: &[u8] =
-                unsafe { slice::from_raw_parts($address.as_ptr(), $length as usize) };
+                unsafe { slice::from_raw_parts($address as *const u8, $length as usize) };
             str::from_utf8(bytes)
         } else {
             Ok("")
         }
     }};
     ($address:expr) => {{
-        let mut address: VirtualAddress = $address;
+        let mut address: usize = $address;
         unsafe {
-            while *(address.as_ptr::<u8>()) != 0 {
+            while *(address as *const u8) != 0 {
                 address += 1;
             }
         }

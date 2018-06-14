@@ -10,8 +10,9 @@
 #![feature(naked_functions)]
 #![feature(allocator_internals)]
 #![feature(allocator_api)]
-#![feature(global_allocator)]
 #![feature(abi_x86_interrupt)]
+#![feature(linkage)]
+#![feature(used)]
 #![no_std]
 #![warn(missing_docs)]
 #![default_lib_allocator]
@@ -37,6 +38,8 @@ extern crate alloc;
 extern crate raw_cpuid;
 #[macro_use]
 extern crate log;
+extern crate multiboot2;
+extern crate spin;
 
 #[macro_use]
 mod macros;
@@ -57,15 +60,21 @@ mod syscalls;
 static OS_NAME: &'static str = "VeOS";
 
 use arch::Architecture;
+use boot::MultibootHeader;
 use core::panic::PanicInfo;
 use memory::allocator::Allocator;
-
 /// Sets the current log level for the kernel.
 const LOG_LEVEL: log::LevelFilter = log::LevelFilter::Trace;
 
 /// The global kernel allocator.
 #[global_allocator]
 static ALLOCATOR: Allocator = Allocator;
+
+/// Multiboot header
+#[linkage = "external"]
+#[link_section = ".multiboot_header"]
+#[used]
+static MBHEADER: MultibootHeader = MultibootHeader::new();
 
 /// The main entry point for the operating system.
 ///
@@ -84,7 +93,6 @@ pub extern "C" fn main(magic_number: u32, information_structure_address: usize) 
 
     arch::Current::init_logger();
     log::set_max_level(LOG_LEVEL);
-
     arch::Current::early_init();
     boot::init(magic_number, information_structure_address);
     io::init();

@@ -1,5 +1,6 @@
 //! Handles the multiboot information structure.
 
+use arch::vga_buffer;
 use core::mem::size_of;
 use memory::{Address, MemoryArea, PhysicalAddress, VirtualAddress};
 
@@ -34,36 +35,38 @@ struct MultibootInformation {
 }
 
 bitflags! {
-    ///The possible flags in the flags field.
-    flags MultibootFlags: u32 {
+    struct MultibootFlags: u32 {
         ///Basic memory information is available.
-        const BASIC_MEMORY = 1 << 0,
+        const BASIC_MEMORY = 1 << 0;
         ///Boot device information is available.
-        const BOOT_DEVICE = 1 << 1,
+        const BOOT_DEVICE = 1 << 1;
         ///A command line is available.
-        const CMDLINE = 1 << 2,
+        const CMDLINE = 1 << 2;
         ///Module information is available.
-        const MODULES = 1 << 3,
+        const MODULES = 1 << 3;
         ///a.out information is available.
-        const A_OUT = 1 << 4,
+        const A_OUT = 1 << 4;
         ///Elf information is available.
-        const ELF = 1 << 5,
+        const ELF = 1 << 5;
         ///A memory map is available.
-        const MMAP = 1 << 6,
+        const MMAP = 1 << 6;
         ///Information about drives  is available.
-        const DRIVES = 1 << 7,
+        const DRIVES = 1 << 7;
         ///A config table is available.
-        const CONFIG_TABLE = 1 << 8,
+        const CONFIG_TABLE = 1 << 8;
         ///The boot loader name is available.
-        const BOOT_LOADER_NAME = 1 << 9,
+        const BOOT_LOADER_NAME = 1 << 9;
         ///An APM table is available.
-        const APM_TABLE = 1 << 10,
+        const APM_TABLE = 1 << 10;
         ///VBE information is available.
-        const VBE = 1 << 11
+        const VBE = 1 << 11;
+        //Framebuffer information is available.
+        const FRAMEBUFFER = 1 << 12;
     }
 }
 
 /// Represents an entry in the given memory map.
+#[derive(Clone, Copy, Debug)]
 #[repr(C, packed)]
 struct MmapEntry {
     /// The size of the entry.
@@ -104,7 +107,27 @@ pub fn init(information_structure_address: usize) {
             to_virtual!(information_structure_address) as *const MultibootInformation
     };
 
-    assert!(!get_flags().contains(A_OUT | ELF));
+    assert!(!get_flags().contains(MultibootFlags::A_OUT | MultibootFlags::ELF));
+}
+
+/// Returns the VGA buffer information requested.
+#[cfg(target_arch = "x86_64")]
+pub fn get_vga_info() -> vga_buffer::Info {
+    if get_flags().contains(MultibootFlags::FRAMEBUFFER) {
+        // let info = get_info();
+        return vga_buffer::Info {
+            height: 25,
+            width: 80,
+            address: VirtualAddress::from_usize(to_virtual!(0xb8000)) /* bpp: 16                                                               * pitch: 160 */
+        };
+    } else {
+        return vga_buffer::Info {
+            height: 25,
+            width: 80,
+            address: VirtualAddress::from_usize(to_virtual!(0xb8000)) /* bpp: 16,
+                                                                       * pitch: 160 */
+        };
+    }
 }
 
 /// Returns the memory area of the initramfs.
@@ -126,9 +149,7 @@ fn get_initramfs_module_entry() -> &'static ModuleEntry {
     for i in 0..mod_count {
         let mod_entry =
             unsafe { &*((mod_addr + i * size_of::<ModuleEntry>()) as *const ModuleEntry) };
-        let mod_string = from_c_str!(VirtualAddress::from_usize(to_virtual!(
-            mod_entry.string as usize
-        ))).unwrap();
+        let mod_string = from_c_str!(to_virtual!(mod_entry.string as usize)).unwrap();
         if mod_string == "initramfs" {
             return mod_entry;
         }
@@ -139,10 +160,8 @@ fn get_initramfs_module_entry() -> &'static ModuleEntry {
 
 /// Returns the name of the boot loader.
 pub fn get_bootloader_name() -> &'static str {
-    if get_flags().contains(BOOT_LOADER_NAME) {
-        from_c_str!(VirtualAddress::from_usize(to_virtual!(
-            get_info().boot_loader_name
-        ))).unwrap()
+    if get_flags().contains(MultibootFlags::BOOT_LOADER_NAME) {
+        from_c_str!(to_virtual!(get_info().boot_loader_name)).unwrap()
     } else {
         // When no specific name was given by the boot loader.
         "a multiboot compliant bootloader"
@@ -170,7 +189,7 @@ pub struct MemoryMapIterator {
 impl MemoryMapIterator {
     /// Creates a new iterator through the memory map.
     fn new() -> MemoryMapIterator {
-        if get_flags().contains(MMAP) {
+        if get_flags().contains(MultibootFlags::MMAP) {
             MemoryMapIterator {
                 address: to_virtual!(get_info().mmap_addr),
                 max_address: to_virtual!(get_info().mmap_addr + get_info().mmap_length)

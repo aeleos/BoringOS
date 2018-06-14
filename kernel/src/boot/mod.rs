@@ -1,8 +1,6 @@
 //! Provides information about the initial status of the system.
-mod freestanding;
 mod multiboot;
 mod multiboot2;
-
 #[cfg(target_arch = "x86_64")]
 use arch::{self, vga_buffer, Architecture};
 use memory::{Address, MemoryArea, PhysicalAddress, PAGE_SIZE};
@@ -35,12 +33,12 @@ fn initramfs() -> MemoryArea<PhysicalAddress> {
 
 /// Provides an iterator for a memory map.
 pub struct MemoryMapIterator {
-    multiboot_iterator: multiboot::MemoryMapIterator,
+    multiboot_iterator: Option<multiboot::MemoryMapIterator>,
+    multiboot2_iterator: Option<multiboot2::MemoryMapIterator>,
     to_exclude: [MemoryArea<PhysicalAddress>; 2],
     current_entry: Option<MemoryArea<PhysicalAddress>>,
     exclude_index: usize
 }
-
 impl MemoryMapIterator {
     /// Creates a new memory map iterator.
     fn new() -> MemoryMapIterator {
@@ -53,17 +51,32 @@ impl MemoryMapIterator {
             [initramfs_area, kernel_area]
         };
 
-        let mut multiboot_iterator = multiboot::get_memory_map();
-
-        let current_entry = multiboot_iterator.next();
-
         let exclude_index = 0;
 
-        MemoryMapIterator {
-            multiboot_iterator,
-            to_exclude,
-            current_entry,
-            exclude_index
+        match *get_boot_method() {
+            BootMethod::Multiboot => {
+                let mut multiboot_iterator = multiboot::get_memory_map();
+                let current_entry = multiboot_iterator.next();
+                MemoryMapIterator {
+                    multiboot_iterator: Some(multiboot_iterator),
+                    multiboot2_iterator: None,
+                    to_exclude,
+                    current_entry,
+                    exclude_index
+                }
+            },
+            BootMethod::Multiboot2 => {
+                let mut multiboot2_iterator = multiboot2::get_memory_map();
+                let current_entry = multiboot2_iterator.next();
+                MemoryMapIterator {
+                    multiboot_iterator: None,
+                    multiboot2_iterator: Some(multiboot2_iterator),
+                    to_exclude,
+                    current_entry,
+                    exclude_index
+                }
+            },
+            _ => unimplemented!()
         }
     }
 }
@@ -79,10 +92,16 @@ impl Iterator for MemoryMapIterator {
         // - A to_exclude entry must lie completely within a memory area.
 
         let get_next_entry = |iterator: &mut MemoryMapIterator| match *get_boot_method() {
-            BootMethod::Multiboot => iterator.multiboot_iterator.next(),
+            BootMethod::Multiboot => match iterator.multiboot_iterator {
+                Some(ref mut iter) => iter.next(),
+                None => panic!("shouldn't be here")
+            },
+            BootMethod::Multiboot2 => match iterator.multiboot2_iterator {
+                Some(ref mut iter) => iter.next(),
+                None => panic!("shouldn't be here")
+            },
             _ => unimplemented!()
         };
-
         loop {
             return if let Some(current_entry) = self.current_entry {
                 if self.exclude_index >= self.to_exclude.len() {
@@ -131,6 +150,7 @@ impl Iterator for MemoryMapIterator {
             } else {
                 None
             };
+            // test
         }
     }
 }
@@ -149,7 +169,7 @@ pub fn init(magic_number: u32, information_structure_address: usize) {
     match *get_boot_method() {
         BootMethod::Multiboot2 => multiboot2::init(information_structure_address),
         BootMethod::Multiboot => multiboot::init(information_structure_address),
-        _ => freestanding::init()
+        _ => unimplemented!()
     };
 }
 
@@ -173,8 +193,9 @@ fn get_boot_method() -> &'static BootMethod {
 #[cfg(target_arch = "x86_64")]
 pub fn get_vga_info() -> vga_buffer::Info {
     match *get_boot_method() {
+        BootMethod::Multiboot => multiboot::get_vga_info(),
         BootMethod::Multiboot2 => multiboot2::get_vga_info(),
-        _ => freestanding::get_vga_info()
+        _ => unimplemented!()
     }
 }
 
@@ -191,6 +212,7 @@ pub fn get_bootloader_name() -> &'static str {
 pub fn get_initramfs_area() -> MemoryArea<PhysicalAddress> {
     match *get_boot_method() {
         BootMethod::Multiboot => multiboot::get_initramfs_area(),
+        BootMethod::Multiboot2 => multiboot2::get_initramfs_area(),
         _ => unimplemented!()
     }
 }
@@ -198,4 +220,75 @@ pub fn get_initramfs_area() -> MemoryArea<PhysicalAddress> {
 /// Returns an iterator for the map of usable memory.
 pub fn get_memory_map() -> MemoryMapIterator {
     MemoryMapIterator::new()
+}
+
+use core;
+
+#[repr(C, packed)]
+pub struct Multiboot1 {
+    magic: u32,
+    flags: u32,
+    checksum: u32,
+    header_addr: u32,
+    load_addr: u32,
+    load_end_addr: u32,
+    bss_end_addr: u32,
+    entry_addr: u32,
+    mode_type: u32,
+    width: u32,
+    height: u32,
+    depth: u32
+}
+
+#[repr(C, packed)]
+struct Multiboot2 {
+    pub magic: u32,
+    pub arch: u32,
+    pub header_length: u32,
+    pub checksum: u32,
+    pub end_tag_type: u16,
+    pub end_tag_flags: u16,
+    pub end_tag_size: u32
+}
+
+#[repr(C, align(8))]
+pub struct MultibootHeader {
+    mb1: Multiboot1,
+    mb2: Multiboot2
+}
+
+impl MultibootHeader {
+    const MB_MAGIC: u32 = 0x1BADB002;
+    const MB_FLAGS: u32 = 0b0000_0000_0000_0000_0000_0000_0000_0000;
+
+    const MB2_MAGIC: u32 = 0xE85250D6;
+    const MB2_SIZE: u32 = core::mem::size_of::<Multiboot2>() as u32;
+
+    pub const fn new() -> Self {
+        MultibootHeader {
+            mb1: Multiboot1 {
+                magic: Self::MB_MAGIC,
+                flags: Self::MB_FLAGS,
+                checksum: u32::max_value() - Self::MB_MAGIC - Self::MB_FLAGS + 1,
+                header_addr: 0,
+                load_addr: 0,
+                load_end_addr: 0,
+                bss_end_addr: 0,
+                entry_addr: 0,
+                mode_type: 0,
+                width: 0,
+                height: 0,
+                depth: 0
+            },
+            mb2: Multiboot2 {
+                magic: Self::MB2_MAGIC,
+                arch: 0,
+                header_length: Self::MB2_SIZE,
+                checksum: u32::max_value() - Self::MB2_MAGIC - Self::MB2_SIZE + 1,
+                end_tag_type: 0,
+                end_tag_flags: 0,
+                end_tag_size: 8
+            }
+        }
+    }
 }
