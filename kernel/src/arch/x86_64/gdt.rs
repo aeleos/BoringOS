@@ -68,11 +68,11 @@ cpu_local! {
     /// The global descriptor table of the CPU.
     pub static ref GDT: Gdt = |_| {
         let mut gdt = Gdt::new();
-        gdt.add_entry(Descriptor::code(DPL0));
-        gdt.add_entry(Descriptor::data(DPL0));
+        gdt.add_entry(Descriptor::code(DescriptorFlags::DPL0));
+        gdt.add_entry(Descriptor::data(DescriptorFlags::DPL0));
         gdt.add_entry(Descriptor::unused());
-        gdt.add_entry(Descriptor::data(DPL3));
-        gdt.add_entry(Descriptor::code(DPL3));
+        gdt.add_entry(Descriptor::data(DescriptorFlags::DPL3));
+        gdt.add_entry(Descriptor::code(DescriptorFlags::DPL3));
         gdt.add_entry(Descriptor::tss(&*TSS));
 
         gdt
@@ -124,25 +124,25 @@ impl Gdt {
 
 bitflags! {
     /// The possible flags for a 64-bit descriptor.
-    flags DescriptorFlags: u64 {
+    struct DescriptorFlags: u64 {
         /// The segment is readable.
-        const READABLE           = 1 << (9 + 32),
+        const READABLE           = 1 << (9 + 32);
         /// The segment is executable.
-        const EXECUTABLE         = 1 << (11 + 32),
+        const EXECUTABLE         = 1 << (11 + 32);
         /// The descriptor is a user descriptor.
-        const USER_SEGMENT       = 1 << (12 + 32),
+        const USER_SEGMENT       = 1 << (12 + 32);
         /// The privilege level of this descriptor is 0 (highest).
-        const DPL0               = 0 << (13 + 32),
+        const DPL0               = 0 << (13 + 32);
         /// The privilege level of this descriptor is 1.
-        const DPL1               = 1 << (13 + 32),
+        const DPL1               = 1 << (13 + 32);
         /// The privilege level of this descriptor is 2.
-        const DPL2               = 2 << (13 + 32),
+        const DPL2               = 2 << (13 + 32);
         /// The privilege level of this descriptor is 3 (lowest).
-        const DPL3               = 3 << (13 + 32),
+        const DPL3               = 3 << (13 + 32);
         /// This descriptor is present.
-        const PRESENT            = 1 << (15 + 32),
+        const PRESENT            = 1 << (15 + 32);
         /// This is a long mode descriptor.
-        const LONG_MODE          = 1 << (21 + 32)
+        const LONG_MODE          = 1 << (21 + 32);
     }
 }
 
@@ -158,13 +158,22 @@ enum Descriptor {
 impl Descriptor {
     /// Creates a new code descriptor.
     fn code(dpl: DescriptorFlags) -> Descriptor {
-        let val = READABLE | EXECUTABLE | USER_SEGMENT | PRESENT | LONG_MODE | dpl;
+        let val = DescriptorFlags::READABLE
+            | DescriptorFlags::EXECUTABLE
+            | DescriptorFlags::USER_SEGMENT
+            | DescriptorFlags::PRESENT
+            | DescriptorFlags::LONG_MODE
+            | dpl;
         Descriptor::UserDescriptor(val.bits())
     }
 
     /// Creates a new data descriptor.
     fn data(dpl: DescriptorFlags) -> Descriptor {
-        let val = READABLE | USER_SEGMENT | PRESENT | LONG_MODE | dpl;
+        let val = DescriptorFlags::READABLE
+            | DescriptorFlags::USER_SEGMENT
+            | DescriptorFlags::PRESENT
+            | DescriptorFlags::LONG_MODE
+            | dpl;
         Descriptor::UserDescriptor(val.bits())
     }
 
@@ -182,7 +191,7 @@ impl Descriptor {
         low_val |= (base & 0xffff) << 16; // The lowest two bytes of the base address.
         low_val |= (base >> 16 & 0xff) << 32; // The third byte of the base address.
         low_val |= 0b1001 << (8 + 32); // The type of this descriptor.
-        low_val |= PRESENT.bits(); // The present bit of the descriptor.
+        low_val |= DescriptorFlags::PRESENT.bits(); // The present bit of the descriptor.
         low_val |= (base >> 24 & 0xff) << (24 + 32); // The fourth byte of the base address.
 
         let high_val = base >> 32; // The last four bytes of the base address.

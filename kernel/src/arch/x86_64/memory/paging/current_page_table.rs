@@ -125,9 +125,13 @@ impl CurrentPageTable {
         let l4 = self.get_l4();
         let entry = &mut l4[509];
         let preemption_state = entry.lock();
-        if !entry.flags().contains(PRESENT) {
+        if !entry.flags().contains(PageTableEntryFlags::PRESENT) {
             entry
-                .set_flags(PRESENT | WRITABLE | NO_EXECUTE)
+                .set_flags(
+                    PageTableEntryFlags::PRESENT
+                        | PageTableEntryFlags::WRITABLE
+                        | PageTableEntryFlags::NO_EXECUTE
+                )
                 .set_address(frame.get_address());
         }
 
@@ -138,8 +142,8 @@ impl CurrentPageTable {
     pub fn unmap_inactive(&mut self, preemption_state: &PreemptionState) {
         let l4 = self.get_l4();
         let entry = &mut l4[509];
-        debug_assert!(entry.flags().contains(PRESENT));
-        entry.remove_flags(PRESENT);
+        debug_assert!(entry.flags().contains(PageTableEntryFlags::PRESENT));
+        entry.remove_flags(PageTableEntryFlags::PRESENT);
         entry.unlock(&preemption_state);
     }
 
@@ -169,7 +173,12 @@ impl CurrentPageTable {
         if entry.points_to() != Some(frame.get_address()) {
             tlb::flush(::x86_64::VirtualAddress(virtual_address.as_usize()));
             entry.set_address(frame.get_address());
-            entry.set_flags(PRESENT | WRITABLE | DISABLE_CACHE | NO_EXECUTE);
+            entry.set_flags(
+                PageTableEntryFlags::PRESENT
+                    | PageTableEntryFlags::WRITABLE
+                    | PageTableEntryFlags::DISABLE_CACHE
+                    | PageTableEntryFlags::NO_EXECUTE
+            );
         }
 
         // Perform the action.

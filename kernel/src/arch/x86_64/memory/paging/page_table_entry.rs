@@ -17,34 +17,34 @@ pub struct PageTableEntry(u64);
 
 bitflags! {
     /// The possible flags in a page table entry.
-    pub flags PageTableEntryFlags: u64 {
+    pub struct PageTableEntryFlags: u64 {
         /// The page is present.
-        const PRESENT = 1 << 0,
+        const PRESENT = 1 << 0;
         /// The page is writable.
-        const WRITABLE = 1 << 1,
+        const WRITABLE = 1 << 1;
         /// The page is accessible in user mode.
-        const USER_ACCESSIBLE = 1 << 2,
+        const USER_ACCESSIBLE = 1 << 2;
         /// Writes will not be cached.
-        const WRITE_TROUGH_CACHING = 1 << 3,
+        const WRITE_TROUGH_CACHING = 1 << 3;
         /// Page accesses will not be cached.
-        const DISABLE_CACHE = 1 << 4,
+        const DISABLE_CACHE = 1 << 4;
         /// The page was accessed.
-        const ACCESSED = 1 << 5,
+        const ACCESSED = 1 << 5;
         /// The page was written to.
-        const DIRTY = 1 << 6,
+        const DIRTY = 1 << 6;
         /// The page is a huge page.
-        const HUGE_PAGE = 1 << 7,
+        const HUGE_PAGE = 1 << 7;
         /// The page is global.
         ///
         /// This means that it won't be flushed from the caches on an address space switch.
-        const GLOBAL = 1 << 8,
+        const GLOBAL = 1 << 8;
         /// Ensures mutual exclusion for pages this entry points to.
-        const ENTRY_LOCK = 1 << 9,
+        const ENTRY_LOCK = 1 << 9;
         /// No code on this page can be executed.
-        const NO_EXECUTE = 1 << 63,
+        const NO_EXECUTE = 1 << 63;
 
         /// The flags used for page tables.
-        const PAGE_TABLE_FLAGS = PRESENT.bits | WRITABLE.bits | USER_ACCESSIBLE.bits
+        const PAGE_TABLE_FLAGS = Self::PRESENT.bits | Self::WRITABLE.bits | Self::USER_ACCESSIBLE.bits;
     }
 }
 
@@ -61,7 +61,7 @@ impl PageTableEntry {
 
     /// Returns the address this entry points to.
     pub fn points_to(&self) -> Option<PhysicalAddress> {
-        if self.flags().contains(PRESENT) {
+        if self.flags().contains(PageTableEntryFlags::PRESENT) {
             Some(PhysicalAddress::from_usize(
                 self.0 as usize & PHYSICAL_ADDRESS_MASK
             ))
@@ -81,7 +81,9 @@ impl PageTableEntry {
     /// Sets the given flags in the entry.
     pub fn set_flags(&mut self, flags: PageTableEntryFlags) -> &mut PageTableEntry {
         if self.is_locked() {
-            self.0 = (self.0 & PHYSICAL_ADDRESS_MASK as u64) | flags.bits() | ENTRY_LOCK.bits();
+            self.0 = (self.0 & PHYSICAL_ADDRESS_MASK as u64)
+                | flags.bits()
+                | PageTableEntryFlags::ENTRY_LOCK.bits();
         } else {
             self.0 = (self.0 & PHYSICAL_ADDRESS_MASK as u64) | flags.bits();
         }
@@ -114,8 +116,9 @@ impl PageTableEntry {
             unsafe {
                 preemption_state = disable_preemption();
             }
-            let lock_switch =
-                atomic_lock.fetch_or(ENTRY_LOCK.bits(), Ordering::Acquire) & ENTRY_LOCK.bits() == 0;
+            let lock_switch = atomic_lock
+                .fetch_or(PageTableEntryFlags::ENTRY_LOCK.bits(), Ordering::Acquire)
+                & PageTableEntryFlags::ENTRY_LOCK.bits() == 0;
             if lock_switch {
                 break;
             } else {
@@ -125,7 +128,7 @@ impl PageTableEntry {
             }
 
             // Wait until the lock looks unlocked before retrying
-            while atomic_lock.load(Ordering::Relaxed) & ENTRY_LOCK.bits() > 0 {
+            while atomic_lock.load(Ordering::Relaxed) & PageTableEntryFlags::ENTRY_LOCK.bits() > 0 {
                 cpu_relax();
             }
         }
@@ -136,7 +139,7 @@ impl PageTableEntry {
     /// Unlocks the pages this entry points to and restores the preemption
     /// state.
     pub fn unlock(&mut self, preemption_state: &PreemptionState) {
-        self.0 = self.0 & !ENTRY_LOCK.bits();
+        self.0 = self.0 & !PageTableEntryFlags::ENTRY_LOCK.bits();
         unsafe {
             restore_preemption_state(preemption_state);
         }
@@ -144,13 +147,13 @@ impl PageTableEntry {
 
     /// Checks if this entry is locked.
     pub fn is_locked(&self) -> bool {
-        self.flags().contains(ENTRY_LOCK)
+        self.flags().contains(PageTableEntryFlags::ENTRY_LOCK)
     }
 }
 
 impl fmt::Debug for PageTableEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.flags().contains(PRESENT) {
+        if self.flags().contains(PageTableEntryFlags::PRESENT) {
             write!(
                 f,
                 "Entry(Address={:?}, Flags={:?})",
@@ -174,7 +177,7 @@ mod tests {
         let mut entry = PageTableEntry::new();
         entry.set_address(0xdead_b000);
         assert_eq!(entry.points_to(), None);
-        entry.set_flags(PRESENT);
+        entry.set_flags(PageTableEntryFlags::PRESENT);
         assert_eq!(entry.points_to(), Some(0xdead_b000));
     }
 
@@ -198,7 +201,11 @@ mod tests {
     #[test]
     fn test_flags() {
         let mut entry = PageTableEntry::new();
-        let flags = PRESENT | DIRTY | USER_ACCESSIBLE | WRITABLE | NO_EXECUTE;
+        let flags = PageTableEntryFlags::PRESENT
+            | PageTableEntryFlags::DIRTY
+            | PageTableEntryFlags::USER_ACCESSIBLE
+            | PageTableEntryFlags::WRITABLE
+            | PageTableEntryFlags::NO_EXECUTE;
         entry.set_flags(flags);
         assert_eq!(entry.flags(), flags);
     }
@@ -207,7 +214,11 @@ mod tests {
     #[test]
     fn test_flag_change() {
         let mut entry = PageTableEntry::new();
-        let flags = PRESENT | DIRTY | USER_ACCESSIBLE | WRITABLE | NO_EXECUTE;
+        let flags = PageTableEntryFlags::PRESENT
+            | PageTableEntryFlags::DIRTY
+            | PageTableEntryFlags::USER_ACCESSIBLE
+            | PageTableEntryFlags::WRITABLE
+            | PageTableEntryFlags::NO_EXECUTE;
         entry.set_address(0xcafe_b000);
         entry.set_flags(flags);
         assert_eq!(entry.points_to(), Some(0xcafe_b000));
@@ -217,7 +228,11 @@ mod tests {
     #[test]
     fn test_representation() {
         let mut entry = PageTableEntry::new();
-        let flags = PRESENT | DIRTY | USER_ACCESSIBLE | WRITABLE | NO_EXECUTE;
+        let flags = PageTableEntryFlags::PRESENT
+            | PageTableEntryFlags::DIRTY
+            | PageTableEntryFlags::USER_ACCESSIBLE
+            | PageTableEntryFlags::WRITABLE
+            | PageTableEntryFlags::NO_EXECUTE;
         entry.set_flags(flags);
         entry.set_address(0xdead_b000);
         assert_eq!(

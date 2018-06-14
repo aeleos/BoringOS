@@ -75,8 +75,8 @@ impl<T: ReducablePageTableLevel> PageTable<T> {
     fn get_next_level_address(&self, index: usize) -> Option<VirtualAddress> {
         assert!(index < ENTRY_NUMBER);
         let flags = self[index].flags();
-        debug_assert!(!flags.contains(HUGE_PAGE));
-        if flags.contains(PRESENT) {
+        debug_assert!(!flags.contains(PageTableEntryFlags::HUGE_PAGE));
+        if flags.contains(PageTableEntryFlags::PRESENT) {
             Some(VirtualAddress::from_usize(
                 (self as *const _ as usize | index << 3) << 9
             ))
@@ -91,13 +91,13 @@ impl<T: ReducablePageTableLevel> PageTable<T> {
     pub fn next_level_and_map(&mut self, address: VirtualAddress) -> &mut PageTable<T::NextLevel> {
         let index = PageTable::<T>::table_index(address);
         let flags = self[index].flags();
-        debug_assert!(!flags.contains(HUGE_PAGE));
+        debug_assert!(!flags.contains(PageTableEntryFlags::HUGE_PAGE));
         // TODO: here would be the place to check whether the page is swapped out
 
-        let new_table = if !flags.contains(PRESENT) {
+        let new_table = if !flags.contains(PageTableEntryFlags::PRESENT) {
             // create a new table
             let frame = FRAME_ALLOCATOR.allocate();
-            self[index].set_flags(PAGE_TABLE_FLAGS);
+            self[index].set_flags(PageTableEntryFlags::PAGE_TABLE_FLAGS);
             self[index].set_address(frame.get_address());
             true
         } else {

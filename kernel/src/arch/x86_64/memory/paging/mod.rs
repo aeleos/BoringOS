@@ -13,7 +13,6 @@ use self::page_table_entry::*;
 use self::page_table_manager::PageTableManager;
 use super::*;
 use core::fmt;
-use memory;
 use memory::{Address, PageFlags, PhysicalAddress, VirtualAddress};
 
 /// Initializes the paging.
@@ -32,22 +31,22 @@ pub fn init(initramfs_area: MemoryArea<PhysicalAddress>) {
 
 /// Converts the general `PageFlags` to x86_64-specific flags.
 pub fn convert_flags(flags: PageFlags) -> PageTableEntryFlags {
-    let mut entry_flags = PRESENT;
+    let mut entry_flags = PageTableEntryFlags::PRESENT;
 
-    if flags.contains(memory::WRITABLE) {
-        entry_flags |= WRITABLE;
+    if flags.contains(PageFlags::WRITABLE) {
+        entry_flags |= PageTableEntryFlags::WRITABLE;
     }
 
-    if !flags.contains(memory::EXECUTABLE) {
-        entry_flags |= NO_EXECUTE;
+    if !flags.contains(PageFlags::EXECUTABLE) {
+        entry_flags |= PageTableEntryFlags::NO_EXECUTE;
     }
 
-    if flags.contains(memory::NO_CACHE) {
-        entry_flags |= DISABLE_CACHE;
+    if flags.contains(PageFlags::NO_CACHE) {
+        entry_flags |= PageTableEntryFlags::DISABLE_CACHE;
     }
 
-    if flags.contains(memory::USER_ACCESSIBLE) {
-        entry_flags |= USER_ACCESSIBLE;
+    if flags.contains(PageFlags::USER_ACCESSIBLE) {
+        entry_flags |= PageTableEntryFlags::USER_ACCESSIBLE;
     }
 
     entry_flags
@@ -61,24 +60,24 @@ pub fn get_page_flags(page_address: VirtualAddress) -> PageFlags {
     if let Some(entry) = table.get_entry(Page::from_address(page_address).get_address()) {
         let entry_flags = entry.flags();
 
-        if entry_flags.contains(PRESENT) {
-            flags |= ::memory::PRESENT;
+        if entry_flags.contains(PageTableEntryFlags::PRESENT) {
+            flags |= PageFlags::PRESENT;
         }
 
-        if entry_flags.contains(WRITABLE) {
-            flags |= memory::WRITABLE;
+        if entry_flags.contains(PageTableEntryFlags::WRITABLE) {
+            flags |= PageFlags::WRITABLE;
         }
 
-        if !entry_flags.contains(NO_EXECUTE) {
-            flags |= memory::EXECUTABLE;
+        if !entry_flags.contains(PageTableEntryFlags::NO_EXECUTE) {
+            flags |= PageFlags::EXECUTABLE;
         }
 
-        if entry_flags.contains(DISABLE_CACHE) {
-            flags |= memory::NO_CACHE;
+        if entry_flags.contains(PageTableEntryFlags::DISABLE_CACHE) {
+            flags |= PageFlags::NO_CACHE;
         }
 
-        if entry_flags.contains(USER_ACCESSIBLE) {
-            flags |= memory::USER_ACCESSIBLE;
+        if entry_flags.contains(PageTableEntryFlags::USER_ACCESSIBLE) {
+            flags |= PageFlags::USER_ACCESSIBLE;
         }
     }
 
@@ -130,7 +129,7 @@ unsafe fn map_initramfs(initramfs_area: MemoryArea<PhysicalAddress>) {
         for i in 0..initramfs_page_amount {
             let physical_address = initramfs_area.start_address() + i * PAGE_SIZE;
             let virtual_address = INITRAMFS_MAP_AREA_START + i * PAGE_SIZE;
-            map_page_at(virtual_address, physical_address, memory::READABLE);
+            map_page_at(virtual_address, physical_address, PageFlags::READABLE);
         }
     }
 }
@@ -158,23 +157,35 @@ unsafe fn remap_kernel() {
         };
 
         // Map the text section.
-        map_section(RODATA_START - TEXT_START, TEXT_START, GLOBAL);
+        map_section(
+            RODATA_START - TEXT_START,
+            TEXT_START,
+            PageTableEntryFlags::GLOBAL
+        );
 
         // Map the rodata section.
-        map_section(DATA_START - RODATA_START, RODATA_START, GLOBAL | NO_EXECUTE);
+        map_section(
+            DATA_START - RODATA_START,
+            RODATA_START,
+            PageTableEntryFlags::GLOBAL | PageTableEntryFlags::NO_EXECUTE
+        );
 
         // Map the data section.
         map_section(
             BSS_START - DATA_START,
             DATA_START,
-            WRITABLE | GLOBAL | NO_EXECUTE
+            PageTableEntryFlags::WRITABLE
+                | PageTableEntryFlags::GLOBAL
+                | PageTableEntryFlags::NO_EXECUTE
         );
 
         // Map the bss section
         map_section(
             BSS_END - BSS_START,
             BSS_START,
-            WRITABLE | GLOBAL | NO_EXECUTE
+            PageTableEntryFlags::WRITABLE
+                | PageTableEntryFlags::GLOBAL
+                | PageTableEntryFlags::NO_EXECUTE
         );
     }
 
@@ -183,7 +194,9 @@ unsafe fn remap_kernel() {
     new_page_table.map_page_at(
         Page::from_address(VirtualAddress::from_usize(to_virtual!(0xb8000))),
         PageFrame::from_address(PhysicalAddress::from_usize(0xb8000)),
-        WRITABLE | GLOBAL | NO_EXECUTE
+        PageTableEntryFlags::WRITABLE
+            | PageTableEntryFlags::GLOBAL
+            | PageTableEntryFlags::NO_EXECUTE
     );
 
     // Map the stack pages.
@@ -194,7 +207,9 @@ unsafe fn remap_kernel() {
         new_page_table.map_page_at(
             Page::from_address(virtual_address),
             PageFrame::from_address(physical_address),
-            WRITABLE | GLOBAL | NO_EXECUTE
+            PageTableEntryFlags::WRITABLE
+                | PageTableEntryFlags::GLOBAL
+                | PageTableEntryFlags::NO_EXECUTE
         );
     }
 

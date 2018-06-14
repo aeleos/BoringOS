@@ -2,7 +2,7 @@
 
 use super::frame_allocator::FRAME_ALLOCATOR;
 use super::page_table::{Level1, Level2, Level4, PageTable};
-use super::page_table_entry::{PageTableEntry, PageTableEntryFlags, PRESENT};
+use super::page_table_entry::{PageTableEntry, PageTableEntryFlags};
 use super::{Page, PageFrame};
 use core::ops::{Deref, DerefMut};
 use memory::{Address, PhysicalAddress, VirtualAddress};
@@ -175,7 +175,7 @@ pub trait PageTableManager {
     fn map_page_at(&mut self, page: Page, frame: PageFrame, flags: PageTableEntryFlags) {
         if let Some(entry) = self.get_entry(page.get_address()) {
             debug_assert!(
-                !entry.flags().contains(PRESENT),
+                !entry.flags().contains(PageTableEntryFlags::PRESENT),
                 "Trying to double map page {:?}",
                 page.get_address()
             );
@@ -186,14 +186,14 @@ pub trait PageTableManager {
 
         entry
             .set_address(frame.get_address())
-            .set_flags(flags | PRESENT);
+            .set_flags(flags | PageTableEntryFlags::PRESENT);
     }
 
     /// Maps the given page to an allocated frame with the given flags.
     fn map_page(&mut self, page: Page, flags: PageTableEntryFlags) {
         if let Some(entry) = self.get_entry(page.get_address()) {
             debug_assert!(
-                !entry.flags().contains(PRESENT),
+                !entry.flags().contains(PageTableEntryFlags::PRESENT),
                 "Trying to double map page {:?}",
                 page.get_address()
             );
@@ -208,7 +208,7 @@ pub trait PageTableManager {
     fn change_permissions_or_map(&mut self, page: Page, flags: PageTableEntryFlags) {
         let is_mapped = {
             if let Some(entry) = self.get_entry(page.get_address()) {
-                entry.flags().contains(PRESENT)
+                entry.flags().contains(PageTableEntryFlags::PRESENT)
             } else {
                 false
             }
@@ -217,7 +217,7 @@ pub trait PageTableManager {
         if is_mapped {
             self.get_entry(page.get_address())
                 .unwrap()
-                .set_flags(PRESENT | flags);
+                .set_flags(PageTableEntryFlags::PRESENT | flags);
         } else {
             self.map_page(page, flags);
         }

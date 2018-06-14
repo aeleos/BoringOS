@@ -3,7 +3,7 @@
 
 use super::super::memory::map_page_at;
 use super::{IRQ8_INTERRUPT_TICKS, SPURIOUS_INTERRUPT_HANDLER_NUM, TIMER_INTERRUPT_HANDLER_NUM};
-use memory::{PhysicalAddress, VirtualAddress, NO_CACHE, READABLE, WRITABLE};
+use memory::{PageFlags, PhysicalAddress, VirtualAddress};
 use raw_cpuid::CpuId;
 use sync::{disable_preemption, restore_preemption_state};
 use x86_64::instructions::interrupts;
@@ -70,7 +70,11 @@ static mut TICKS_PER_MS: u32 = 1_000_000;
 pub fn init() {
     assert_has_not_been_called!("The LAPIC should only be initialized once.");
 
-    map_page_at(get_lapic_base(), LAPIC_BASE, READABLE | WRITABLE | NO_CACHE);
+    map_page_at(
+        get_lapic_base(),
+        LAPIC_BASE,
+        PageFlags::READABLE | PageFlags::WRITABLE | PageFlags::NO_CACHE
+    );
 
     let cpu_id = CpuId::new()
         .get_feature_info()
@@ -82,15 +86,15 @@ pub fn init() {
     inactive_register.set_inactive();
 
     let mut lint0_register = LVTRegister::new();
-    lint0_register.set_delivery_mode(EXTINT_DELIVERY_MODE);
-    lint0_register.set_trigger_mode(LEVEL_SENSITIVE);
+    lint0_register.set_delivery_mode(LVTRegisterFlags::EXTINT_DELIVERY_MODE);
+    lint0_register.set_trigger_mode(LVTRegisterFlags::LEVEL_SENSITIVE);
 
     let mut lint1_register = LVTRegister::new();
-    lint1_register.set_delivery_mode(NMI_DELIVERY_MODE);
-    lint1_register.set_trigger_mode(EDGE_SENSITIVE);
+    lint1_register.set_delivery_mode(LVTRegisterFlags::NMI_DELIVERY_MODE);
+    lint1_register.set_trigger_mode(LVTRegisterFlags::EDGE_SENSITIVE);
 
     let mut timer_register = LVTRegister::new();
-    timer_register.set_timer_mode(ONE_SHOT_TIMER_MODE);
+    timer_register.set_timer_mode(LVTRegisterFlags::ONE_SHOT_TIMER_MODE);
     timer_register.set_vector(TIMER_INTERRUPT_HANDLER_NUM);
 
     unsafe {
@@ -260,12 +264,16 @@ unsafe fn set_lvt_register(offset: usize, register: LVTRegister) {
 
 /// Issues an interrupt to the current CPU.
 pub fn issue_self_interrupt(vector: u8) {
-    issue_interrupt(SELF, vector);
+    issue_interrupt(InterruptDestinationMode::SELF, vector);
 }
 
 /// Issues the given interrupt for the given target(s).
 fn issue_interrupt(target: InterruptDestinationMode, vector: u8) {
-    assert!(target.intersects(SELF | ALL | ALL_EXCLUDING_SELF));
+    assert!(target.intersects(
+        InterruptDestinationMode::SELF
+            | InterruptDestinationMode::ALL
+            | InterruptDestinationMode::ALL_EXCLUDING_SELF
+    ));
 
     let mut icr = target.bits();
     icr |= vector as u64;
@@ -275,17 +283,17 @@ fn issue_interrupt(target: InterruptDestinationMode, vector: u8) {
 
 bitflags! {
     /// The possible destination modes for interrupts.
-    flags InterruptDestinationMode: u64 {
+    struct InterruptDestinationMode: u64 {
         /// The destination address for the interrupt is logical.
-        const LOGICAL = 1 << 11,
+        const LOGICAL = 1 << 11;
         /// The destination address for the interrupt is physical.
-        const PHYSICAL = 0 << 11,
+        const PHYSICAL = 0 << 11;
         /// The interrupt addresses the only the current CPU.
-        const SELF = 0b01 << 18,
+        const SELF = 0b01 << 18;
         /// The interrupt addresses all CPUS.
-        const ALL = 0b10 << 18,
+        const ALL = 0b10 << 18;
         /// The interrupt addresses all but the current CPU.
-        const ALL_EXCLUDING_SELF = 0b11 << 18
+        const ALL_EXCLUDING_SELF = 0b11 << 18;
     }
 }
 
@@ -296,53 +304,53 @@ struct LVTRegister(u32);
 
 bitflags! {
     /// Contains the possible flags for an LVT register.
-    flags LVTRegisterFlags: u32 {
+    struct LVTRegisterFlags: u32 {
         /// Corresponds to the interrupt vector in the IVT.
-        const VECTOR = 0xff,
+        const VECTOR = 0xff;
         /// The delivery mode of the interrupt.
-        const DELIVERY_MODE = 0b111 << 8,
+        const DELIVERY_MODE = 0b111 << 8;
         /// Delivers the interrupt to the specified vector.
-        const FIXED_DELIVERY_MODE = 0b000 << 8,
+        const FIXED_DELIVERY_MODE = 0b000 << 8;
         /// Delivers an SMI interrupt.
-        const SMI_DELIVERY_MODE = 0b010 << 8,
+        const SMI_DELIVERY_MODE = 0b010 << 8;
         /// Delivers an NMI interrupt.
-        const NMI_DELIVERY_MODE = 0b100 << 8,
+        const NMI_DELIVERY_MODE = 0b100 << 8;
         /// For external interrupts.
-        const EXTINT_DELIVERY_MODE = 0b111 << 8,
+        const EXTINT_DELIVERY_MODE = 0b111 << 8;
         /// Delivers an INIT request.
-        const INIT_DELIVERY_MODE = 0b101 << 8,
+        const INIT_DELIVERY_MODE = 0b101 << 8;
         /// The delivery status of the interrupt.
         ///
         /// Read only.
-        const DELIVERY_STATUS = 1 << 12,
+        const DELIVERY_STATUS = 1 << 12;
         /// Specifies when the pin is active.
-        const PIN_POLARITY = 1 << 13,
+        const PIN_POLARITY = 1 << 13;
         /// The pin is active when high.
-        const HIGH_ACTIVE_PIN_POLARITY = 0 << 13,
+        const HIGH_ACTIVE_PIN_POLARITY = 0 << 13;
         /// The pin is active when low.
-        const LOW_ACTIVE_PIN_POLARITY = 1 << 13,
+        const LOW_ACTIVE_PIN_POLARITY = 1 << 13;
         /// Indicates if the interrupt is being serviced.
         ///
         /// Read only.
-        const REMOTRE_IRR = 1 << 14,
+        const REMOTRE_IRR = 1 << 14;
         /// Specifies the trigger mode for the interrupt.
-        const TRIGGER_MODE = 1 << 15,
+        const TRIGGER_MODE = 1 << 15;
         /// For edge sensitive interrupts.
-        const EDGE_SENSITIVE = 0 << 15,
+        const EDGE_SENSITIVE = 0 << 15;
         /// For level sensitive interrupts.
-        const LEVEL_SENSITIVE = 1 << 15,
+        const LEVEL_SENSITIVE = 1 << 15;
         /// Masks the interrupt.
-        const MASK = 1 << 16,
+        const MASK = 1 << 16;
         /// Sets the mode for the timer.
         ///
         /// Only valid for the timer interrupt register.
-        const TIMER_MODE = 0b11 << 17,
+        const TIMER_MODE = 0b11 << 17;
         /// Sets the timer as a one shot timer.
-        const ONE_SHOT_TIMER_MODE = 0b00 << 17,
+        const ONE_SHOT_TIMER_MODE = 0b00 << 17;
         /// Sets the timer to be periodic.
-        const PERIODIC_TIMER_MODE = 0b01 << 17,
+        const PERIODIC_TIMER_MODE = 0b01 << 17;
         /// Sets the timer to a deadline timer.
-        const DEADLINE_TIMER_MODE = 0b10 << 17
+        const DEADLINE_TIMER_MODE = 0b10 << 17;
     }
 }
 
@@ -351,42 +359,42 @@ impl LVTRegister {
     fn new() -> LVTRegister {
         let mut register = LVTRegister(0);
         register.set_active();
-        register.set_delivery_mode(FIXED_DELIVERY_MODE);
+        register.set_delivery_mode(LVTRegisterFlags::FIXED_DELIVERY_MODE);
 
         register
     }
 
     /// Sets the vector of this interrupt.
     fn set_vector(&mut self, num: u8) {
-        self.0 &= !VECTOR.bits();
+        self.0 &= !LVTRegisterFlags::VECTOR.bits();
         self.0 |= num as u32;
     }
 
     /// Sets the delivery mode for this interrupt.
     fn set_delivery_mode(&mut self, mode: LVTRegisterFlags) {
-        self.0 &= !DELIVERY_MODE.bits();
+        self.0 &= !LVTRegisterFlags::DELIVERY_MODE.bits();
         self.0 |= mode.bits();
     }
 
     /// Sets the trigger mode for this interrupt.
     fn set_trigger_mode(&mut self, mode: LVTRegisterFlags) {
-        self.0 &= !TRIGGER_MODE.bits();
+        self.0 &= !LVTRegisterFlags::TRIGGER_MODE.bits();
         self.0 |= mode.bits();
     }
 
     /// Deactivates this interrupt.
     fn set_inactive(&mut self) {
-        self.0 |= MASK.bits();
+        self.0 |= LVTRegisterFlags::MASK.bits();
     }
 
     /// Activates this interrupt.
     fn set_active(&mut self) {
-        self.0 &= !MASK.bits();
+        self.0 &= !LVTRegisterFlags::MASK.bits();
     }
 
     /// Sets the timer mode for this interrupt.
     fn set_timer_mode(&mut self, timer_mode: LVTRegisterFlags) {
-        self.0 &= !TIMER_MODE.bits();
+        self.0 &= !LVTRegisterFlags::TIMER_MODE.bits();
         self.0 |= timer_mode.bits();
     }
 }

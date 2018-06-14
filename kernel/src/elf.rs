@@ -8,7 +8,7 @@ use file_handle::FileHandle;
 use initramfs;
 use memory::address_space;
 use memory::address_space::{AddressSpace, Segment};
-use memory::{Address, MemoryArea, PhysicalAddress, VirtualAddress, PAGE_SIZE};
+use memory::{Address, MemoryArea, PageFlags, PhysicalAddress, VirtualAddress, PAGE_SIZE};
 use multitasking::{create_process, ProcessID};
 
 /// Represents an ELF file.
@@ -332,13 +332,13 @@ enum SegmentType {
 
 bitflags! {
     /// The different flags a segment can have.
-    flags SegmentFlags: u32 {
+    struct SegmentFlags: u32 {
         /// The segment may be executed.
-        const EXECUTABLE = 0x1,
+        const EXECUTABLE = 0x1;
         /// The segment is writable.
-        const WRITABLE = 0x2,
+        const WRITABLE = 0x2;
         /// The segment is readable.
-        const READABLE = 0x4
+        const READABLE = 0x4;
     }
 }
 
@@ -435,19 +435,19 @@ fn process_from_elf_file(mut file: ElfFile) -> Result<ProcessID, ElfError> {
             }
 
             // Convert the flags to page flags.
-            let mut flags = ::memory::USER_ACCESSIBLE;
+            let mut flags = PageFlags::USER_ACCESSIBLE;
             let header_flags = program_header.flags;
 
-            if header_flags.contains(READABLE) {
-                flags |= ::memory::READABLE;
+            if header_flags.contains(SegmentFlags::READABLE) {
+                flags |= PageFlags::READABLE;
             }
 
-            if header_flags.contains(WRITABLE) {
-                flags |= ::memory::WRITABLE;
+            if header_flags.contains(SegmentFlags::WRITABLE) {
+                flags |= PageFlags::WRITABLE;
             }
 
-            if header_flags.contains(EXECUTABLE) {
-                flags |= ::memory::EXECUTABLE;
+            if header_flags.contains(SegmentFlags::EXECUTABLE) {
+                flags |= PageFlags::EXECUTABLE;
             }
 
             let segment = Segment::new(

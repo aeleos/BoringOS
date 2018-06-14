@@ -294,19 +294,19 @@ impl<AddressType: Address + fmt::Debug> fmt::Debug for MemoryArea<AddressType> {
 
 bitflags! {
     /// The flags a page could possibly have.
-    pub flags PageFlags: u8 {
+    pub struct PageFlags: u8 {
         /// Set if the page can be read from.
-        const READABLE = 1 << 0,
+        const READABLE = 1 << 0;
         /// Set if the page can be written to.
-        const WRITABLE = 1 << 1,
+        const WRITABLE = 1 << 1;
         /// Set if code on the page can be executed.
-        const EXECUTABLE = 1 << 2,
+        const EXECUTABLE = 1 << 2;
         /// Set if the page should not be cached.
-        const NO_CACHE = 1 << 3,
+        const NO_CACHE = 1 << 3;
         /// Set if the page should be accessible from user mode.
-        const USER_ACCESSIBLE = 1 << 4,
+        const USER_ACCESSIBLE = 1 << 4;
         /// Set if the page is currently present.
-        const PRESENT = 1 << 5
+        const PRESENT = 1 << 5;
     }
 }
 

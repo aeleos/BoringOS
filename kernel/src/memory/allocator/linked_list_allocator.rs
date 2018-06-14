@@ -4,7 +4,7 @@ use super::align;
 use arch::{self, Architecture};
 use core::fmt;
 use core::mem::{align_of, size_of};
-use memory::{Address, MemoryArea, VirtualAddress, PAGE_SIZE, READABLE, WRITABLE};
+use memory::{Address, MemoryArea, PageFlags, VirtualAddress, PAGE_SIZE};
 
 /// The linked list allocator interface.
 pub struct LinkedListAllocator {
@@ -109,7 +109,7 @@ impl Node {
 
         // Map all the necessary pages.
         while next_node_start + size_of::<Node>() > *end_address {
-            arch::Current::map_page(*end_address, READABLE | WRITABLE);
+            arch::Current::map_page(*end_address, PageFlags::READABLE | PageFlags::WRITABLE);
             *end_address = (*end_address) + PAGE_SIZE;
         }
 
@@ -225,7 +225,10 @@ impl LinkedListAllocator {
     /// Creates a new linked list allocator.
     pub fn new(managed_area: MemoryArea<VirtualAddress>) -> LinkedListAllocator {
         assert_has_not_been_called!("There should only be one linked list allocator.");
-        arch::Current::map_page(managed_area.start_address(), READABLE | WRITABLE);
+        arch::Current::map_page(
+            managed_area.start_address(),
+            PageFlags::READABLE | PageFlags::WRITABLE
+        );
 
         let first_node: &mut Node = unsafe { &mut *(managed_area.start_address().as_mut_ptr()) };
 

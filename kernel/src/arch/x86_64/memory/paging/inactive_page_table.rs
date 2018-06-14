@@ -58,12 +58,16 @@ impl InactivePageTable {
         table.zero();
 
         // Set up some invariants.
-        table[510]
-            .set_address(TEMPORARY_MAP_TABLE)
-            .set_flags(PRESENT | WRITABLE | NO_EXECUTE);
-        table[511]
-            .set_address(frame.get_address())
-            .set_flags(PRESENT | WRITABLE | NO_EXECUTE);
+        table[510].set_address(TEMPORARY_MAP_TABLE).set_flags(
+            PageTableEntryFlags::PRESENT
+                | PageTableEntryFlags::WRITABLE
+                | PageTableEntryFlags::NO_EXECUTE
+        );
+        table[511].set_address(frame.get_address()).set_flags(
+            PageTableEntryFlags::PRESENT
+                | PageTableEntryFlags::WRITABLE
+                | PageTableEntryFlags::NO_EXECUTE
+        );
 
         InactivePageTable {
             l4_table: Unique::new_unchecked(L4_TABLE),
@@ -87,13 +91,17 @@ impl InactivePageTable {
         table[507] = CURRENT_PAGE_TABLE.lock().get_l4()[507].clone();
 
         unsafe {
-            table[510]
-                .set_address(TEMPORARY_MAP_TABLE)
-                .set_flags(PRESENT | WRITABLE | NO_EXECUTE);
+            table[510].set_address(TEMPORARY_MAP_TABLE).set_flags(
+                PageTableEntryFlags::PRESENT
+                    | PageTableEntryFlags::WRITABLE
+                    | PageTableEntryFlags::NO_EXECUTE
+            );
         }
-        table[511]
-            .set_address(frame.get_address())
-            .set_flags(PRESENT | WRITABLE | NO_EXECUTE);
+        table[511].set_address(frame.get_address()).set_flags(
+            PageTableEntryFlags::PRESENT
+                | PageTableEntryFlags::WRITABLE
+                | PageTableEntryFlags::NO_EXECUTE
+        );
 
         CURRENT_PAGE_TABLE.lock().unmap_inactive(&preemption_state);
 
