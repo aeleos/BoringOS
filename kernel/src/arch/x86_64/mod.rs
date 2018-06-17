@@ -11,6 +11,7 @@ mod syscalls;
 pub mod vga_buffer;
 #[macro_use]
 mod serial;
+mod init;
 
 pub use self::context::Context;
 use self::gdt::{GDT, TSS};

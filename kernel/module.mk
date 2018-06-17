@@ -5,7 +5,7 @@ FMT_DIRS += kernel
 LINKER_SCRIPT := kernel/src/arch/$(ARCH)/linker.ld
 
 KERNEL_BUILD_TARGET := $(ARCH)-unknown-none-gnu
-KERNEL_LINKER_FLAGS := -n -T $(LINKER_SCRIPT) --gc-sections
+KERNEL_LINKER_FLAGS := -n -T $(LINKER_SCRIPT)
 
 KERNEL_LIB := target/$(KERNEL_BUILD_TARGET)/$(BUILD_TYPE)/libveos.a
 KERNEL_BINARY := target/$(KERNEL_BUILD_TARGET)/build/kernel-$(ARCH).bin

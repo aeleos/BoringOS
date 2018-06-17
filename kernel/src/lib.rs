@@ -13,6 +13,7 @@
 #![feature(abi_x86_interrupt)]
 #![feature(linkage)]
 #![feature(used)]
+#![feature(global_asm)]
 #![no_std]
 #![warn(missing_docs)]
 #![default_lib_allocator]
