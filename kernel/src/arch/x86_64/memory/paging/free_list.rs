@@ -20,7 +20,7 @@ struct FreeListEntry {
     /// The length of this entry.
     length: usize,
     /// The start address of the next entry.
-    next_entry: Option<PhysicalAddress>
+    next_entry: Option<PhysicalAddress>,
 }
 
 impl FreeListEntry {
@@ -33,7 +33,7 @@ impl FreeListEntry {
 /// Represents the list of free page frames.
 pub struct FreeList {
     /// The first entry in the linked list.
-    first_entry: Option<PhysicalAddress>
+    first_entry: Option<PhysicalAddress>,
 }
 
 impl FreeList {
@@ -166,7 +166,7 @@ pub struct FreeListIterator<'a> {
     #[allow(dead_code)]
     list: MutexGuard<'a, FreeList>,
     /// The next address in the free list.
-    next_address: Option<PhysicalAddress>
+    next_address: Option<PhysicalAddress>,
 }
 
 impl<'a> FreeListIterator<'a> {
@@ -210,7 +210,8 @@ pub fn init() {
     assert_has_not_been_called!("The free list should only be initialized once.");
 
     let mut free_list = FREE_LIST.lock();
+
     for entry in boot::get_memory_map() {
-        unsafe { free_list.insert(entry) };
+        unsafe { free_list.insert(entry) }
     }
 }

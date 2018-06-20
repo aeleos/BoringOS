@@ -190,7 +190,7 @@ impl SubAssign<usize> for VirtualAddress {
 
 /// Represents a chunk of virtual memory.
 #[derive(Clone, Copy, Default)]
-pub struct MemoryArea<AddressType: Address> {
+pub struct MemoryArea<AddressType: Sized + Address> {
     /// The address at which the chunk starts.
     start_address: AddressType,
     /// The length of the chunk.

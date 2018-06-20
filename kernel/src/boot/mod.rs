@@ -3,16 +3,18 @@ mod multiboot;
 mod multiboot2;
 #[cfg(target_arch = "x86_64")]
 use arch::{self, vga_buffer, Architecture};
+use core;
+use either::Either;
 use memory::{Address, MemoryArea, PhysicalAddress, PAGE_SIZE};
-
 /// Lists possiblities for boot sources.
-enum BootMethod {
+#[derive(PartialEq)]
+pub enum BootMethod {
     /// No known bootloader could be found.
     Unknown,
     /// The system was booted using multiboot.
     Multiboot,
     /// The system was booted using multiboot2.
-    Multiboot2
+    Multiboot2,
 }
 
 /// The memory area containing the initramfs.
@@ -32,16 +34,20 @@ fn initramfs() -> MemoryArea<PhysicalAddress> {
 }
 
 /// Provides an iterator for a memory map.
-pub struct MemoryMapIterator {
-    multiboot_iterator: Option<multiboot::MemoryMapIterator>,
-    multiboot2_iterator: Option<multiboot2::MemoryMapIterator>,
+pub struct MemoryMapIterator<I: Iterator<Item = MemoryArea<PhysicalAddress>>> {
+    // multiboot2_iterator: Option<multiboot2::MemoryMapIterator>,
     to_exclude: [MemoryArea<PhysicalAddress>; 2],
     current_entry: Option<MemoryArea<PhysicalAddress>>,
-    exclude_index: usize
+    exclude_index: usize,
+    multiboot_iterator: I,
 }
-impl MemoryMapIterator {
+
+impl<I> MemoryMapIterator<I>
+where
+    I: Iterator<Item = MemoryArea<PhysicalAddress>>,
+{
     /// Creates a new memory map iterator.
-    fn new() -> MemoryMapIterator {
+    fn new(mut iter: I) -> MemoryMapIterator<I> {
         let kernel_area = arch::Current::get_kernel_area();
         let initramfs_area = initramfs();
 
@@ -51,37 +57,19 @@ impl MemoryMapIterator {
             [initramfs_area, kernel_area]
         };
 
-        let exclude_index = 0;
-
-        match *get_boot_method() {
-            BootMethod::Multiboot => {
-                let mut multiboot_iterator = multiboot::get_memory_map();
-                let current_entry = multiboot_iterator.next();
-                MemoryMapIterator {
-                    multiboot_iterator: Some(multiboot_iterator),
-                    multiboot2_iterator: None,
-                    to_exclude,
-                    current_entry,
-                    exclude_index
-                }
-            },
-            BootMethod::Multiboot2 => {
-                let mut multiboot2_iterator = multiboot2::get_memory_map();
-                let current_entry = multiboot2_iterator.next();
-                MemoryMapIterator {
-                    multiboot_iterator: None,
-                    multiboot2_iterator: Some(multiboot2_iterator),
-                    to_exclude,
-                    current_entry,
-                    exclude_index
-                }
-            },
-            _ => unimplemented!()
+        MemoryMapIterator {
+            to_exclude: to_exclude,
+            current_entry: iter.next(),
+            exclude_index: 0,
+            multiboot_iterator: iter,
         }
     }
 }
 
-impl Iterator for MemoryMapIterator {
+impl<I> Iterator for MemoryMapIterator<I>
+where
+    I: Iterator<Item = MemoryArea<PhysicalAddress>>,
+{
     type Item = MemoryArea<PhysicalAddress>;
 
     fn next(&mut self) -> Option<MemoryArea<PhysicalAddress>> {
@@ -91,23 +79,12 @@ impl Iterator for MemoryMapIterator {
         // - The memory areas must not overlap.
         // - A to_exclude entry must lie completely within a memory area.
 
-        let get_next_entry = |iterator: &mut MemoryMapIterator| match *get_boot_method() {
-            BootMethod::Multiboot => match iterator.multiboot_iterator {
-                Some(ref mut iter) => iter.next(),
-                None => panic!("shouldn't be here")
-            },
-            BootMethod::Multiboot2 => match iterator.multiboot2_iterator {
-                Some(ref mut iter) => iter.next(),
-                None => panic!("shouldn't be here")
-            },
-            _ => unimplemented!()
-        };
         loop {
             return if let Some(current_entry) = self.current_entry {
                 if self.exclude_index >= self.to_exclude.len() {
                     // If all the exclude areas were handled.
 
-                    self.current_entry = get_next_entry(self);
+                    self.current_entry = self.multiboot_iterator.next();
 
                     Some(current_entry)
                 } else if self.to_exclude[self.exclude_index].is_contained_in(current_entry) {
@@ -120,19 +97,19 @@ impl Iterator for MemoryMapIterator {
                         (
                             MemoryArea::new(
                                 current_entry.start_address(),
-                                exclude_area.start_address() - current_entry.start_address()
+                                exclude_area.start_address() - current_entry.start_address(),
                             ),
                             MemoryArea::new(
                                 exclude_area.end_address(),
-                                current_entry.end_address() - exclude_area.end_address()
-                            )
+                                current_entry.end_address() - exclude_area.end_address(),
+                            ),
                         )
                     };
 
                     self.exclude_index += 1;
 
                     if entry_after.end_address() == entry_after.start_address() {
-                        self.current_entry = get_next_entry(self);
+                        self.current_entry = self.multiboot_iterator.next();
                     } else {
                         self.current_entry = Some(entry_after);
                     }
@@ -143,14 +120,13 @@ impl Iterator for MemoryMapIterator {
                         Some(entry_before)
                     }
                 } else {
-                    self.current_entry = get_next_entry(self);
+                    self.current_entry = self.multiboot_iterator.next();
 
                     Some(current_entry)
                 }
             } else {
                 None
             };
-            // test
         }
     }
 }
@@ -169,7 +145,7 @@ pub fn init(magic_number: u32, information_structure_address: usize) {
     match *get_boot_method() {
         BootMethod::Multiboot2 => multiboot2::init(information_structure_address),
         BootMethod::Multiboot => multiboot::init(information_structure_address),
-        _ => unimplemented!()
+        _ => unimplemented!(),
     };
 }
 
@@ -179,13 +155,13 @@ fn set_boot_method(magic_number: u32) {
         BOOT_METHOD = match magic_number {
             0x36d7_6289 => BootMethod::Multiboot2,
             0x2bad_b002 => BootMethod::Multiboot,
-            _ => BootMethod::Unknown
+            _ => BootMethod::Unknown,
         }
     }
 }
 
 /// Returns the method the system was booted with.
-fn get_boot_method() -> &'static BootMethod {
+pub fn get_boot_method() -> &'static BootMethod {
     unsafe { &BOOT_METHOD }
 }
 
@@ -195,7 +171,7 @@ pub fn get_vga_info() -> vga_buffer::Info {
     match *get_boot_method() {
         BootMethod::Multiboot => multiboot::get_vga_info(),
         BootMethod::Multiboot2 => multiboot2::get_vga_info(),
-        _ => unimplemented!()
+        _ => unimplemented!(),
     }
 }
 
@@ -204,7 +180,7 @@ pub fn get_bootloader_name() -> &'static str {
     match *get_boot_method() {
         BootMethod::Multiboot2 => multiboot2::get_bootloader_name(),
         BootMethod::Multiboot => multiboot::get_bootloader_name(),
-        _ => "no boot loader"
+        _ => "no boot loader",
     }
 }
 
@@ -213,16 +189,23 @@ pub fn get_initramfs_area() -> MemoryArea<PhysicalAddress> {
     match *get_boot_method() {
         BootMethod::Multiboot => multiboot::get_initramfs_area(),
         BootMethod::Multiboot2 => multiboot2::get_initramfs_area(),
-        _ => unimplemented!()
+        _ => unimplemented!(),
     }
 }
 
 /// Returns an iterator for the map of usable memory.
-pub fn get_memory_map() -> MemoryMapIterator {
-    MemoryMapIterator::new()
+pub fn get_memory_map() -> Either<
+    MemoryMapIterator<multiboot::MemoryMapIterator>,
+    MemoryMapIterator<multiboot2::MemoryMapIterator>,
+> {
+    match *get_boot_method() {
+        BootMethod::Multiboot => Either::Left(MemoryMapIterator::new(multiboot::get_memory_map())),
+        BootMethod::Multiboot2 => {
+            Either::Right(MemoryMapIterator::new(multiboot2::get_memory_map()))
+        }
+        _ => unimplemented!(),
+    }
 }
-
-use core;
 
 #[repr(C, packed)]
 pub struct Multiboot1 {
@@ -237,7 +220,7 @@ pub struct Multiboot1 {
     mode_type: u32,
     width: u32,
     height: u32,
-    depth: u32
+    depth: u32,
 }
 
 #[repr(C, packed)]
@@ -248,13 +231,13 @@ struct Multiboot2 {
     pub checksum: u32,
     pub end_tag_type: u16,
     pub end_tag_flags: u16,
-    pub end_tag_size: u32
+    pub end_tag_size: u32,
 }
 
 #[repr(C, align(8))]
 pub struct MultibootHeader {
     mb1: Multiboot1,
-    mb2: Multiboot2
+    mb2: Multiboot2,
 }
 
 impl MultibootHeader {
@@ -278,7 +261,7 @@ impl MultibootHeader {
                 mode_type: 0,
                 width: 0,
                 height: 0,
-                depth: 0
+                depth: 0,
             },
             mb2: Multiboot2 {
                 magic: Self::MB2_MAGIC,
@@ -287,8 +270,8 @@ impl MultibootHeader {
                 checksum: u32::max_value() - Self::MB2_MAGIC - Self::MB2_SIZE + 1,
                 end_tag_type: 0,
                 end_tag_flags: 0,
-                end_tag_size: 8
-            }
+                end_tag_size: 8,
+            },
         }
     }
 }

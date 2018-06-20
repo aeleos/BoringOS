@@ -20,16 +20,16 @@ pub fn get_vga_info() -> vga_buffer::Info {
         Some(framebuffer_tag) => vga_buffer::Info {
             height: framebuffer_tag.height as usize,
             width: framebuffer_tag.width as usize,
-            address: VirtualAddress::from_usize(to_virtual!(framebuffer_tag.addr)) /* bpp: framebuffer_tag.
-                                                                                    * bpp,
-                                                                                    * pitch: framebuffer_tag.pitch as usize */
+            address: VirtualAddress::from_usize(to_virtual!(framebuffer_tag.addr)), /* bpp: framebuffer_tag.
+                                                                                     * bpp,
+                                                                                     * pitch: framebuffer_tag.pitch as usize */
         },
         None => vga_buffer::Info {
             height: 25,
             width: 80,
-            address: VirtualAddress::from_usize(to_virtual!(0xb8000)) /* bpp: 16,
-                                                                       * pitch: 160 */
-        }
+            address: VirtualAddress::from_usize(to_virtual!(0xb8000)), /* bpp: 16,
+                                                                        * pitch: 160 */
+        },
     }
 }
 
@@ -37,7 +37,7 @@ pub fn get_vga_info() -> vga_buffer::Info {
 pub fn get_bootloader_name() -> &'static str {
     match BOOT_INFO.try().unwrap().boot_loader_name_tag() {
         Some(boot_loader_name_tag) => boot_loader_name_tag.name(),
-        None => "a multiboot compliant bootloader"
+        None => "a multiboot compliant bootloader",
     }
 }
 
@@ -58,14 +58,14 @@ pub fn get_initramfs_area() -> MemoryArea<PhysicalAddress> {
 
     MemoryArea::from_start_and_end(
         PhysicalAddress::from_usize(module_entry.start_address() as usize),
-        PhysicalAddress::from_usize(module_entry.end_address() as usize)
+        PhysicalAddress::from_usize(module_entry.end_address() as usize),
     )
 }
 
 /// Provides an iterator for the memory map.
 pub struct MemoryMapIterator {
     /// Iterator for current memory.
-    memory: multiboot2::MemoryAreaIter
+    memory: multiboot2::MemoryAreaIter,
 }
 
 impl MemoryMapIterator {
@@ -77,7 +77,7 @@ impl MemoryMapIterator {
                 .unwrap()
                 .memory_map_tag()
                 .expect("missing multiboot memory map tag")
-                .memory_areas()
+                .memory_areas(),
         }
     }
 }
@@ -90,7 +90,7 @@ impl Iterator for MemoryMapIterator {
             if next_area.area_type() == multiboot2::MemoryAreaType::Usable {
                 return Some(MemoryArea::new(
                     PhysicalAddress::from_usize(next_area.start_address()),
-                    next_area.size()
+                    next_area.size(),
                 ));
             }
         }

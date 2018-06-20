@@ -31,7 +31,7 @@ struct MultibootInformation {
     vbe_mode: u16,
     vbe_interface_seg: u16,
     vbe_interface_off: u16,
-    vbe_interface_len: u16
+    vbe_interface_len: u16,
 }
 
 bitflags! {
@@ -78,7 +78,7 @@ struct MmapEntry {
     /// The type of memory contained in the area.
     ///
     /// 1 means usable memory.
-    mem_type: u32
+    mem_type: u32,
 }
 
 /// Represents a module loaded by the boot loader.
@@ -91,7 +91,7 @@ struct ModuleEntry {
     /// The string associated with the module.
     string: u32,
     /// Reserved, don't use.
-    reserved: u32
+    reserved: u32,
 }
 
 /// The base address for the information strucuture.
@@ -118,14 +118,14 @@ pub fn get_vga_info() -> vga_buffer::Info {
         return vga_buffer::Info {
             height: 25,
             width: 80,
-            address: VirtualAddress::from_usize(to_virtual!(0xb8000)) /* bpp: 16                                                               * pitch: 160 */
+            address: VirtualAddress::from_usize(to_virtual!(0xb8000)), /* bpp: 16                                                               * pitch: 160 */
         };
     } else {
         return vga_buffer::Info {
             height: 25,
             width: 80,
-            address: VirtualAddress::from_usize(to_virtual!(0xb8000)) /* bpp: 16,
-                                                                       * pitch: 160 */
+            address: VirtualAddress::from_usize(to_virtual!(0xb8000)), /* bpp: 16,
+                                                                        * pitch: 160 */
         };
     }
 }
@@ -136,7 +136,7 @@ pub fn get_initramfs_area() -> MemoryArea<PhysicalAddress> {
 
     MemoryArea::from_start_and_end(
         PhysicalAddress::from_usize(module_entry.mod_start as usize),
-        PhysicalAddress::from_usize(module_entry.mod_end as usize)
+        PhysicalAddress::from_usize(module_entry.mod_end as usize),
     )
 }
 
@@ -183,21 +183,23 @@ pub struct MemoryMapIterator {
     /// The address of the current entry in the memory map.
     address: usize,
     /// The address after the last entry in the memory map.
-    max_address: usize
+    max_address: usize,
 }
 
 impl MemoryMapIterator {
     /// Creates a new iterator through the memory map.
     fn new() -> MemoryMapIterator {
-        if get_flags().contains(MultibootFlags::MMAP) {
+        if get_flags().contains(MultibootFlags::MMAP)
+            && *super::get_boot_method() == super::BootMethod::Multiboot
+        {
             MemoryMapIterator {
                 address: to_virtual!(get_info().mmap_addr),
-                max_address: to_virtual!(get_info().mmap_addr + get_info().mmap_length)
+                max_address: to_virtual!(get_info().mmap_addr + get_info().mmap_length),
             }
         } else {
             MemoryMapIterator {
                 address: 0,
-                max_address: 0
+                max_address: 0,
             }
         }
     }
@@ -216,7 +218,7 @@ impl Iterator for MemoryMapIterator {
                 // only a type of 1 is usable memory
                 return Some(MemoryArea::new(
                     current_entry.base_addr,
-                    current_entry.length
+                    current_entry.length,
                 ));
             }
         }
