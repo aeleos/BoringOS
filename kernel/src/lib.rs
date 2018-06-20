@@ -2,7 +2,6 @@
 #![feature(panic_implementation)]
 #![feature(const_fn)]
 #![feature(ptr_internals)]
-#![feature(repr_transparent)]
 #![feature(duration_extras)]
 #![feature(asm)]
 #![feature(integer_atomics)]
@@ -38,6 +37,7 @@ extern crate alloc;
 extern crate raw_cpuid;
 #[macro_use]
 extern crate log;
+extern crate either;
 extern crate multiboot2;
 extern crate spin;
 
