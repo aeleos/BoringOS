@@ -7,29 +7,29 @@ use super::paging::{convert_flags, Page, PageFrame, CURRENT_PAGE_TABLE};
 use super::PAGE_SIZE;
 use super::{
     KERNEL_STACK_AREA_BASE, KERNEL_STACK_MAX_SIZE, KERNEL_STACK_OFFSET, USER_STACK_AREA_BASE,
-    USER_STACK_MAX_SIZE, USER_STACK_OFFSET
+    USER_STACK_MAX_SIZE, USER_STACK_OFFSET,
 };
 use core::ptr;
 use memory::{
-    address_space_manager, Address, AddressSpace, PageFlags, PhysicalAddress, VirtualAddress
+    address_space_manager, Address, AddressSpace, PageFlags, PhysicalAddress, VirtualAddress,
 };
 use multitasking::stack::AccessType;
 use multitasking::{Stack, ThreadID};
 
 pub struct AddressSpaceManager {
-    table: InactivePageTable
+    table: InactivePageTable,
 }
 
 impl address_space_manager::AddressSpaceManager for AddressSpaceManager {
     fn new() -> AddressSpaceManager {
         AddressSpaceManager {
-            table: InactivePageTable::copy_from_current()
+            table: InactivePageTable::copy_from_current(),
         }
     }
 
     fn idle() -> AddressSpaceManager {
         AddressSpaceManager {
-            table: InactivePageTable::from_current_table()
+            table: InactivePageTable::from_current_table(),
         }
     }
 
@@ -49,7 +49,7 @@ impl address_space_manager::AddressSpaceManager for AddressSpaceManager {
             // First map with write permissions.
             self.table.change_permissions_or_map(
                 Page::from_address(page_address),
-                PageTableEntryFlags::WRITABLE
+                PageTableEntryFlags::WRITABLE,
             );
 
             // Get the physical address.
@@ -61,7 +61,7 @@ impl address_space_manager::AddressSpaceManager for AddressSpaceManager {
             // Write to the physical address.
             let (new_current_buffer_position, new_current_offset) = CURRENT_PAGE_TABLE
                 .lock()
-                .with_temporary_page(&PageFrame::from_address(physical_address), |page| {
+                .with_temporary_page(PageFrame::from_address(physical_address), |page| {
                     let start_address = page.get_address() + current_offset;
 
                     let write_length =
@@ -77,13 +77,13 @@ impl address_space_manager::AddressSpaceManager for AddressSpaceManager {
                         ptr::copy_nonoverlapping(
                             buffer.as_ptr(),
                             start_address.as_mut_ptr(),
-                            write_length
+                            write_length,
                         );
                     }
 
                     (
                         current_buffer_position + write_length,
-                        (current_offset + write_length) % PAGE_SIZE
+                        (current_offset + write_length) % PAGE_SIZE,
                     )
                 });
 
@@ -129,7 +129,7 @@ impl address_space_manager::AddressSpaceManager for AddressSpaceManager {
             KERNEL_STACK_MAX_SIZE,
             KERNEL_STACK_AREA_BASE + KERNEL_STACK_OFFSET * tid,
             AccessType::KernelOnly,
-            Some(address_space)
+            Some(address_space),
         )
     }
 
@@ -140,7 +140,7 @@ impl address_space_manager::AddressSpaceManager for AddressSpaceManager {
             USER_STACK_MAX_SIZE,
             USER_STACK_AREA_BASE + USER_STACK_OFFSET * tid,
             AccessType::UserAccessible,
-            Some(address_space)
+            Some(address_space),
         )
     }
 
@@ -150,7 +150,7 @@ impl address_space_manager::AddressSpaceManager for AddressSpaceManager {
             KERNEL_STACK_MAX_SIZE,
             KERNEL_STACK_AREA_BASE + KERNEL_STACK_OFFSET * cpu_id,
             AccessType::KernelOnly,
-            None
+            None,
         )
     }
 }

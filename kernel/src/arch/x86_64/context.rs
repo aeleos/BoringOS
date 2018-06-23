@@ -17,7 +17,7 @@ use x86_64::structures::idt::ExceptionStackFrame;
 pub struct Context {
     pub kernel_stack_pointer: VirtualAddress,
     base_pointer: VirtualAddress,
-    page_table_address: PhysicalAddress
+    page_table_address: PhysicalAddress,
 }
 
 impl arch::Context for Context {
@@ -31,7 +31,7 @@ impl arch::Context for Context {
         arg2: usize,
         arg3: usize,
         arg4: usize,
-        arg5: usize
+        arg5: usize,
     ) -> Context {
         use x86_64::registers::flags::Flags;
 
@@ -40,7 +40,7 @@ impl arch::Context for Context {
             code_segment: u64::from(USER_CODE_SEGMENT.0),
             cpu_flags: (Flags::IF | Flags::A1).bits() as u64,
             stack_pointer: ::x86_64::VirtualAddress(stack_pointer.as_usize()),
-            stack_segment: u64::from(USER_DATA_SEGMENT.0)
+            stack_segment: u64::from(USER_DATA_SEGMENT.0),
         };
 
         unsafe {
@@ -52,14 +52,14 @@ impl arch::Context for Context {
                 arg2,
                 arg3,
                 arg4,
-                arg5
+                arg5,
             );
         }
 
         Context {
             kernel_stack_pointer,
             base_pointer: kernel_stack_pointer,
-            page_table_address: unsafe { address_space.get_page_table_address() }
+            page_table_address: unsafe { address_space.get_page_table_address() },
         }
     }
 
@@ -72,7 +72,7 @@ impl arch::Context for Context {
         Context {
             kernel_stack_pointer: stack_pointer,
             base_pointer: stack_pointer,
-            page_table_address: PhysicalAddress::from_usize(cr3().0 as usize)
+            page_table_address: PhysicalAddress::from_usize(cr3().0 as usize),
         }
     }
 }
@@ -107,7 +107,7 @@ unsafe fn enter_thread() -> ! {
 /// - Make sure that the stack pointer is valid.
 unsafe fn set_idle_stack(stack_pointer: &mut VirtualAddress) {
     *stack_pointer -= size_of::<u64>();
-    *((*stack_pointer).as_mut_ptr()) = idle as u64;
+    *((*stack_pointer).as_mut_ptr()) = idle as usize;
 }
 
 /// Sets the initial kernel stack of a thread, so that it can properly start.
@@ -122,7 +122,7 @@ unsafe fn set_initial_stack(
     arg2: usize,
     arg3: usize,
     arg4: usize,
-    arg5: usize
+    arg5: usize,
 ) {
     Stack::push_in(address_space, stack_pointer, stack_frame);
     Stack::push_in(address_space, stack_pointer, arg5);
@@ -130,7 +130,7 @@ unsafe fn set_initial_stack(
     Stack::push_in(address_space, stack_pointer, arg3);
     Stack::push_in(address_space, stack_pointer, arg2);
     Stack::push_in(address_space, stack_pointer, arg1);
-    Stack::push_in(address_space, stack_pointer, enter_thread as u64);
+    Stack::push_in(address_space, stack_pointer, enter_thread as usize);
 }
 
 /// Switches the context from the old thread to the current thread.
@@ -148,7 +148,7 @@ pub unsafe fn switch_context(old_context: &mut Context, new_context: &Context) {
         old_bp: &mut VirtualAddress,
         new_sp: usize,
         new_bp: usize,
-        new_page_table: usize
+        new_page_table: usize,
     ) {
         asm!("mov [rdi], rsp
             mov [rsi], rbp
@@ -177,6 +177,6 @@ pub unsafe fn switch_context(old_context: &mut Context, new_context: &Context) {
         &mut old_context.base_pointer,
         new_sp.as_usize(),
         new_bp.as_usize(),
-        new_context.page_table_address.as_usize()
+        new_context.page_table_address.as_usize(),
     );
 }

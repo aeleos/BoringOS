@@ -23,7 +23,7 @@ pub struct InactivePageTable {
     l4_frame: PageFrame,
     /// Optionally contains the preemption state of the mapped entry in the
     /// current page table.
-    preemption_state: Option<PreemptionState>
+    preemption_state: Option<PreemptionState>,
 }
 
 impl PageTableManager for InactivePageTable {
@@ -39,7 +39,7 @@ impl Drop for InactivePageTable {
     fn drop(&mut self) {
         match self.preemption_state {
             Some(_) => self.unmap(),
-            None => ()
+            None => (),
         }
     }
 }
@@ -51,7 +51,7 @@ impl InactivePageTable {
     /// - Should only be called during kernel setup.
     pub unsafe fn new() -> InactivePageTable {
         let frame = FRAME_ALLOCATOR.allocate();
-        let preemption_state = CURRENT_PAGE_TABLE.lock().map_inactive(&frame);
+        let preemption_state = CURRENT_PAGE_TABLE.lock().map_inactive(frame);
 
         // Zero the page.
         let table = &mut *L4_TABLE;
@@ -61,18 +61,18 @@ impl InactivePageTable {
         table[510].set_address(TEMPORARY_MAP_TABLE).set_flags(
             PageTableEntryFlags::PRESENT
                 | PageTableEntryFlags::WRITABLE
-                | PageTableEntryFlags::NO_EXECUTE
+                | PageTableEntryFlags::NO_EXECUTE,
         );
         table[511].set_address(frame.get_address()).set_flags(
             PageTableEntryFlags::PRESENT
                 | PageTableEntryFlags::WRITABLE
-                | PageTableEntryFlags::NO_EXECUTE
+                | PageTableEntryFlags::NO_EXECUTE,
         );
 
         InactivePageTable {
             l4_table: Unique::new_unchecked(L4_TABLE),
             l4_frame: frame,
-            preemption_state: Some(preemption_state)
+            preemption_state: Some(preemption_state),
         }
     }
 
@@ -80,7 +80,7 @@ impl InactivePageTable {
     /// page table.
     pub fn copy_from_current() -> InactivePageTable {
         let frame = FRAME_ALLOCATOR.allocate();
-        let preemption_state = unsafe { CURRENT_PAGE_TABLE.lock().map_inactive(&frame) };
+        let preemption_state = unsafe { CURRENT_PAGE_TABLE.lock().map_inactive(frame) };
 
         let table = unsafe { &mut *L4_TABLE };
         table.zero();
@@ -94,13 +94,13 @@ impl InactivePageTable {
             table[510].set_address(TEMPORARY_MAP_TABLE).set_flags(
                 PageTableEntryFlags::PRESENT
                     | PageTableEntryFlags::WRITABLE
-                    | PageTableEntryFlags::NO_EXECUTE
+                    | PageTableEntryFlags::NO_EXECUTE,
             );
         }
         table[511].set_address(frame.get_address()).set_flags(
             PageTableEntryFlags::PRESENT
                 | PageTableEntryFlags::WRITABLE
-                | PageTableEntryFlags::NO_EXECUTE
+                | PageTableEntryFlags::NO_EXECUTE,
         );
 
         CURRENT_PAGE_TABLE.lock().unmap_inactive(&preemption_state);
@@ -108,7 +108,7 @@ impl InactivePageTable {
         InactivePageTable {
             l4_table: unsafe { Unique::new_unchecked(L4_TABLE) },
             l4_frame: frame,
-            preemption_state: None
+            preemption_state: None,
         }
     }
 
@@ -126,7 +126,7 @@ impl InactivePageTable {
                     .as_ref()
                     .expect("The old table was not mapped.")
                     .copy()
-            })
+            }),
         }
     }
 
@@ -135,7 +135,7 @@ impl InactivePageTable {
         InactivePageTable {
             l4_table: unsafe { Unique::new_unchecked(L4_TABLE) },
             l4_frame: PageFrame::from_address(PhysicalAddress::from_usize(cr3().0 as usize)),
-            preemption_state: None
+            preemption_state: None,
         }
     }
 
@@ -145,7 +145,7 @@ impl InactivePageTable {
     /// - Ensure that it is properly unmapped every time it's mapped.
     unsafe fn map(&mut self) {
         if self.preemption_state.is_none() {
-            let preemption_state = CURRENT_PAGE_TABLE.lock().map_inactive(&self.l4_frame);
+            let preemption_state = CURRENT_PAGE_TABLE.lock().map_inactive(self.l4_frame);
             self.preemption_state = Some(preemption_state);
         }
     }

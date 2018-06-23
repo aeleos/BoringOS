@@ -15,6 +15,7 @@
 #![no_std]
 #![warn(missing_docs)]
 #![default_lib_allocator]
+#![feature(rust_2018_preview)]
 
 //! The VeOS operating system kernel.
 //!

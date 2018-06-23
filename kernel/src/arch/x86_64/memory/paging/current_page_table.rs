@@ -35,7 +35,7 @@ pub struct CurrentPageTableLock {
     /// The page table being locked.
     current_page_table: UnsafeCell<CurrentPageTable>,
     /// The reference count to the table.
-    reference_count: Mutex<usize>
+    reference_count: Mutex<usize>,
 }
 
 // This is safe because the page table will manage it's own exclusion
@@ -50,7 +50,7 @@ impl CurrentPageTableLock {
     const unsafe fn new(table: CurrentPageTable) -> CurrentPageTableLock {
         CurrentPageTableLock {
             current_page_table: UnsafeCell::new(table),
-            reference_count: Mutex::new(0)
+            reference_count: Mutex::new(0),
         }
     }
 
@@ -60,7 +60,7 @@ impl CurrentPageTableLock {
         *rc += 1;
         CurrentPageTableReference {
             current_page_table: unsafe { &mut *self.current_page_table.get() },
-            reference_count: &self.reference_count
+            reference_count: &self.reference_count,
         }
     }
 }
@@ -68,7 +68,7 @@ impl CurrentPageTableLock {
 /// Serves as a reference to a locked current page table.
 pub struct CurrentPageTableReference<'a> {
     current_page_table: &'a mut CurrentPageTable,
-    reference_count: &'a Mutex<usize>
+    reference_count: &'a Mutex<usize>,
 }
 
 impl<'a> Drop for CurrentPageTableReference<'a> {
@@ -94,7 +94,7 @@ impl<'a> DerefMut for CurrentPageTableReference<'a> {
 
 /// Owns the page table currently in use.
 pub struct CurrentPageTable {
-    l4_table: Unique<PageTable<Level4>>
+    l4_table: Unique<PageTable<Level4>>,
 }
 
 impl PageTableManager for CurrentPageTable {
@@ -111,7 +111,7 @@ impl CurrentPageTable {
     /// table struct.
     const unsafe fn new() -> CurrentPageTable {
         CurrentPageTable {
-            l4_table: Unique::new_unchecked(L4_TABLE)
+            l4_table: Unique::new_unchecked(L4_TABLE),
         }
     }
 
@@ -121,7 +121,7 @@ impl CurrentPageTable {
     ///
     /// # Safety
     /// - Should not be called while another inactive table is mapped.
-    pub unsafe fn map_inactive(&mut self, frame: &PageFrame) -> PreemptionState {
+    pub unsafe fn map_inactive(&mut self, frame: PageFrame) -> PreemptionState {
         let l4 = self.get_l4();
         let entry = &mut l4[509];
         let preemption_state = entry.lock();
@@ -130,7 +130,7 @@ impl CurrentPageTable {
                 .set_flags(
                     PageTableEntryFlags::PRESENT
                         | PageTableEntryFlags::WRITABLE
-                        | PageTableEntryFlags::NO_EXECUTE
+                        | PageTableEntryFlags::NO_EXECUTE,
                 )
                 .set_address(frame.get_address());
         }
@@ -158,9 +158,9 @@ impl CurrentPageTable {
     }
 
     /// Performs the given action with the mapped page.
-    pub fn with_temporary_page<F, T>(&mut self, frame: &PageFrame, action: F) -> T
+    pub fn with_temporary_page<F, T>(&mut self, frame: PageFrame, action: F) -> T
     where
-        F: Fn(&mut Page) -> T
+        F: Fn(&mut Page) -> T,
     {
         // Map the page.
         let index = page_frame_hash(frame);
@@ -177,7 +177,7 @@ impl CurrentPageTable {
                 PageTableEntryFlags::PRESENT
                     | PageTableEntryFlags::WRITABLE
                     | PageTableEntryFlags::DISABLE_CACHE
-                    | PageTableEntryFlags::NO_EXECUTE
+                    | PageTableEntryFlags::NO_EXECUTE,
             );
         }
 
@@ -194,9 +194,9 @@ impl CurrentPageTable {
     pub fn write_at_physical<T: Sized + Copy>(
         &mut self,
         physical_address: PhysicalAddress,
-        data: T
+        data: T,
     ) {
-        self.with_temporary_page(&PageFrame::from_address(physical_address), |page| {
+        self.with_temporary_page(PageFrame::from_address(physical_address), |page| {
             let virtual_address =
                 page.get_address().as_usize() | (physical_address.offset_in_page());
 
@@ -208,7 +208,7 @@ impl CurrentPageTable {
 
     /// Reads from the given physical address.
     pub fn read_from_physical<T: Sized + Copy>(&mut self, physical_address: PhysicalAddress) -> T {
-        self.with_temporary_page(&PageFrame::from_address(physical_address), |page| {
+        self.with_temporary_page(PageFrame::from_address(physical_address), |page| {
             let virtual_address =
                 page.get_address().as_usize() | (physical_address.offset_in_page());
 
@@ -231,11 +231,11 @@ impl CurrentPageTable {
 
         // Make the switch.
         control_regs::cr3_write(::x86_64::PhysicalAddress(
-            new_frame.get_address().as_usize() as u64
+            new_frame.get_address().as_usize() as u64,
         ));
 
         // Map the now inactive old table.
-        self.map_inactive(&old_frame);
+        self.map_inactive(old_frame);
 
         old_table
     }
@@ -245,7 +245,7 @@ impl CurrentPageTable {
 ///
 /// This serves to speed up temporary mapping of page frames,
 /// by better utilizing the available space.
-fn page_frame_hash(frame: &PageFrame) -> usize {
+fn page_frame_hash(frame: PageFrame) -> usize {
     // UNOPTIMIZED: Possibly use a better hash algorithm here?
     let mut address = frame.get_address().as_usize() >> 12;
     address *= 101_489;

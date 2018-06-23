@@ -4,7 +4,7 @@ mod multiboot2;
 #[cfg(target_arch = "x86_64")]
 use arch::{self, vga_buffer, Architecture};
 use core;
-use either::Either;
+use either::{Either, Left, Right};
 use memory::{Address, MemoryArea, PhysicalAddress, PAGE_SIZE};
 /// Lists possiblities for boot sources.
 #[derive(PartialEq)]
@@ -199,15 +199,13 @@ pub fn get_memory_map() -> Either<
     MemoryMapIterator<multiboot2::MemoryMapIterator>,
 > {
     match *get_boot_method() {
-        BootMethod::Multiboot => Either::Left(MemoryMapIterator::new(multiboot::get_memory_map())),
-        BootMethod::Multiboot2 => {
-            Either::Right(MemoryMapIterator::new(multiboot2::get_memory_map()))
-        }
+        BootMethod::Multiboot => Left(MemoryMapIterator::new(multiboot::get_memory_map())),
+        BootMethod::Multiboot2 => Right(MemoryMapIterator::new(multiboot2::get_memory_map())),
         _ => unimplemented!(),
     }
 }
 
-#[repr(C, packed)]
+#[repr(C, align(4))]
 pub struct Multiboot1 {
     magic: u32,
     flags: u32,
@@ -223,28 +221,34 @@ pub struct Multiboot1 {
     depth: u32,
 }
 
-#[repr(C, packed)]
+#[repr(C, align(4))]
 struct Multiboot2 {
     pub magic: u32,
     pub arch: u32,
     pub header_length: u32,
     pub checksum: u32,
+    pub fb_tag_type: u16,
+    pub fb_tag_flags: u16,
+    pub fb_tag_size: u32,
+    pub fb_tag_width: u32,
+    pub fb_tag_height: u32,
+    pub fb_tag_depth: u32,
     pub end_tag_type: u16,
     pub end_tag_flags: u16,
     pub end_tag_size: u32,
 }
 
-#[repr(C, align(8))]
+#[repr(C)]
 pub struct MultibootHeader {
     mb1: Multiboot1,
     mb2: Multiboot2,
 }
 
 impl MultibootHeader {
-    const MB_MAGIC: u32 = 0x1BADB002;
+    const MB_MAGIC: u32 = 0x1BAD_B002;
     const MB_FLAGS: u32 = 0b0000_0000_0000_0000_0000_0000_0000_0000;
 
-    const MB2_MAGIC: u32 = 0xE85250D6;
+    const MB2_MAGIC: u32 = 0xE852_50D6;
     const MB2_SIZE: u32 = core::mem::size_of::<Multiboot2>() as u32;
 
     pub const fn new() -> Self {
@@ -268,6 +272,12 @@ impl MultibootHeader {
                 arch: 0,
                 header_length: Self::MB2_SIZE,
                 checksum: u32::max_value() - Self::MB2_MAGIC - Self::MB2_SIZE + 1,
+                fb_tag_type: 5,
+                fb_tag_flags: 1,
+                fb_tag_size: 20,
+                fb_tag_width: 1024,
+                fb_tag_height: 768,
+                fb_tag_depth: 32,
                 end_tag_type: 0,
                 end_tag_flags: 0,
                 end_tag_size: 8,

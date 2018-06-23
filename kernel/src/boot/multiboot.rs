@@ -32,6 +32,13 @@ struct MultibootInformation {
     vbe_interface_seg: u16,
     vbe_interface_off: u16,
     vbe_interface_len: u16,
+    framebuffer_addr: u64,
+    framebuffer_pitch: u32,
+    framebuffer_width: u32,
+    framebuffer_height: u32,
+    framebuffer_bpp: u8,
+    framebuffer_type: u8,
+    color_info: [u8; 6],
 }
 
 bitflags! {
@@ -114,19 +121,19 @@ pub fn init(information_structure_address: usize) {
 #[cfg(target_arch = "x86_64")]
 pub fn get_vga_info() -> vga_buffer::Info {
     if get_flags().contains(MultibootFlags::FRAMEBUFFER) {
-        // let info = get_info();
-        return vga_buffer::Info {
-            height: 25,
-            width: 80,
-            address: VirtualAddress::from_usize(to_virtual!(0xb8000)), /* bpp: 16                                                               * pitch: 160 */
-        };
+        let info = get_info();
+        vga_buffer::Info {
+            height: info.framebuffer_height as usize,
+            width: info.framebuffer_width as usize,
+            address: VirtualAddress::from_usize(to_virtual!(info.framebuffer_addr)), /* bpp: 16                                                               * pitch: 160 */
+        }
     } else {
-        return vga_buffer::Info {
+        vga_buffer::Info {
             height: 25,
             width: 80,
             address: VirtualAddress::from_usize(to_virtual!(0xb8000)), /* bpp: 16,
                                                                         * pitch: 160 */
-        };
+        }
     }
 }
 
