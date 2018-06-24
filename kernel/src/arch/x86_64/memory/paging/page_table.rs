@@ -5,7 +5,7 @@ use super::page_table_entry::*;
 use core::marker::PhantomData;
 use core::ops::Index;
 use core::ops::IndexMut;
-use memory::{Address, VirtualAddress};
+use crate::memory::{Address, VirtualAddress};
 
 /// The number of entries in a page table.
 pub const ENTRY_NUMBER: usize = 512;

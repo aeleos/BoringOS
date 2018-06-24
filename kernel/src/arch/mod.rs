@@ -4,17 +4,17 @@
 //! provide interfaces to them.
 
 use core::time::Duration;
-use memory::address_space::AddressSpace;
-use memory::{MemoryArea, PageFlags, PhysicalAddress, VirtualAddress};
-use multitasking::stack::StackType;
-use sync::time::Timestamp;
+use crate::memory::address_space::AddressSpace;
+use crate::memory::{MemoryArea, PageFlags, PhysicalAddress, VirtualAddress};
+use crate::multitasking::stack::StackType;
+use crate::sync::time::Timestamp;
 
 pub trait Architecture {
     /// This type is supposed to manage address spaces for the architecture.
     ///
     /// For more details see the `::memory::address_space::AddressSpaceManager`
     /// trait.
-    type AddressSpaceManager: ::memory::address_space_manager::AddressSpaceManager;
+    type AddressSpaceManager: crate::memory::address_space_manager::AddressSpaceManager;
 
     /// This type represents the architecture specific part of an execution
     /// context.
@@ -104,7 +104,7 @@ pub trait Architecture {
     fn get_current_timestamp() -> Timestamp;
 
     /// Sets a timer to enable an interrupt in the given amount of time.
-    fn interrupt_in(Duration);
+    fn interrupt_in(_: Duration);
 
     /// Switches the execution context and saves the current one.
     ///

@@ -1,12 +1,12 @@
 //! This module defines a process control block (PCB).
 
 use alloc::BTreeMap;
-use arch::schedule;
+use crate::arch::schedule;
 use core::cmp::max;
 use core::ops::{Deref, DerefMut};
-use memory::address_space::AddressSpace;
-use multitasking::{get_cpu_num, ProcessID, ThreadID, CURRENT_THREAD, PROCESS_LIST};
-use sync::mutex::MutexGuard;
+use crate::memory::address_space::AddressSpace;
+use crate::multitasking::{get_cpu_num, ProcessID, ThreadID, CURRENT_THREAD, PROCESS_LIST};
+use crate::sync::mutex::MutexGuard;
 
 /// Represents the states a process can have.
 #[derive(Debug, PartialEq)]

@@ -4,8 +4,8 @@ use super::frame_allocator::FRAME_ALLOCATOR;
 use super::PageFrame;
 use core::fmt;
 use core::sync::atomic::{AtomicU64, Ordering};
-use memory::{Address, PhysicalAddress};
-use sync::{cpu_relax, disable_preemption, restore_preemption_state, PreemptionState};
+use crate::memory::{Address, PhysicalAddress};
+use crate::sync::{cpu_relax, disable_preemption, restore_preemption_state, PreemptionState};
 
 /// Serves as a mask for the physical address in a page table entry.
 const PHYSICAL_ADDRESS_MASK: usize = 0xff_ffff_ffff << 12;

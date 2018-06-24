@@ -1,6 +1,6 @@
 //! Handles all x86_64 memory related issues.
 
-use memory::{Address, MemoryArea, PageFlags, PhysicalAddress, VirtualAddress};
+use crate::memory::{Address, MemoryArea, PageFlags, PhysicalAddress, VirtualAddress};
 
 pub mod address_space_manager;
 mod paging;
@@ -105,7 +105,7 @@ pub fn get_kernel_area() -> MemoryArea<PhysicalAddress> {
 pub fn init() {
     assert_has_not_been_called!("The x86_64 memory initialization should only be called once.");
 
-    let physical_initramfs_area = ::boot::get_initramfs_area();
+    let physical_initramfs_area = crate::boot::get_initramfs_area();
 
     paging::init(physical_initramfs_area);
 

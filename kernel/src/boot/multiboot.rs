@@ -1,8 +1,8 @@
 //! Handles the multiboot information structure.
 
-use arch::vga_buffer;
+use crate::arch::vga_buffer;
 use core::mem::size_of;
-use memory::{Address, MemoryArea, PhysicalAddress, VirtualAddress};
+use crate::memory::{Address, MemoryArea, PhysicalAddress, VirtualAddress};
 
 /// Represents the multiboot information structure.
 #[repr(C)]

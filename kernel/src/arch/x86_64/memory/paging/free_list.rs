@@ -2,10 +2,10 @@
 
 use super::current_page_table::CURRENT_PAGE_TABLE;
 use super::PAGE_SIZE;
-use boot;
-use memory::{MemoryArea, PhysicalAddress};
-use sync::mutex::MutexGuard;
-use sync::Mutex;
+use crate::boot;
+use crate::memory::{MemoryArea, PhysicalAddress};
+use crate::sync::mutex::MutexGuard;
+use crate::sync::Mutex;
 
 /// The list of free page frames.
 ///

@@ -1,11 +1,11 @@
 //! This modules is responsible for reading the initramfs.
 
 use alloc::boxed::Box;
-use arch::{self, Architecture};
+use crate::arch::{self, Architecture};
 use core::mem::size_of;
 use core::{ptr, slice, str};
-use file_handle::{FileError, FileHandle, Result, SeekFrom};
-use memory::{MemoryArea, VirtualAddress};
+use crate::file_handle::{FileError, FileHandle, Result, SeekFrom};
+use crate::memory::{MemoryArea, VirtualAddress};
 
 /// The magic number that identifies a VeOS initramfs.
 const MAGIC: [u8; 8] = [

@@ -2,7 +2,7 @@
 //!
 //! It handles all the IO that kernel code needs to perform.
 
-use arch::{self, Architecture};
+use crate::arch::{self, Architecture};
 
 /// Initializes all IO devices.
 pub fn init() {

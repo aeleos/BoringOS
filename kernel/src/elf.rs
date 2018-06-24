@@ -4,12 +4,12 @@ use alloc::boxed::Box;
 use core::fmt;
 use core::mem;
 use core::mem::size_of;
-use file_handle::FileHandle;
-use initramfs;
-use memory::address_space;
-use memory::address_space::{AddressSpace, Segment};
-use memory::{Address, MemoryArea, PageFlags, PhysicalAddress, VirtualAddress, PAGE_SIZE};
-use multitasking::{create_process, ProcessID};
+use crate::file_handle::FileHandle;
+use crate::initramfs;
+use crate::memory::address_space;
+use crate::memory::address_space::{AddressSpace, Segment};
+use crate::memory::{Address, MemoryArea, PageFlags, PhysicalAddress, VirtualAddress, PAGE_SIZE};
+use crate::multitasking::{create_process, ProcessID};
 
 /// Represents an ELF file.
 struct ElfFile {
@@ -470,7 +470,7 @@ fn process_from_elf_file(mut file: ElfFile) -> Result<ProcessID, ElfError> {
                 0
             };
             for i in 0..pages_in_file {
-                let mut segment_data_buffer: [u8; ::memory::PAGE_SIZE] =
+                let mut segment_data_buffer: [u8; crate::memory::PAGE_SIZE] =
                     unsafe { mem::uninitialized() };
 
                 let segment_data = if program_header.size_in_file < (i + 1) * PAGE_SIZE {

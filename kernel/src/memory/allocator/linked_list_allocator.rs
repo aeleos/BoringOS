@@ -1,10 +1,10 @@
 //! Provides an interface for a linked list allocator.
 
 use super::align;
-use arch::{self, Architecture};
+use crate::arch::{self, Architecture};
 use core::fmt;
 use core::mem::{align_of, size_of};
-use memory::{Address, MemoryArea, PageFlags, VirtualAddress, PAGE_SIZE};
+use crate::memory::{Address, MemoryArea, PageFlags, VirtualAddress, PAGE_SIZE};
 
 /// The linked list allocator interface.
 pub struct LinkedListAllocator {

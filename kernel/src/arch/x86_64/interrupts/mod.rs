@@ -6,9 +6,9 @@ pub mod lapic;
 pub use self::lapic::issue_self_interrupt;
 use super::sync::CLOCK;
 use core::time::Duration;
-use memory::{Address, VirtualAddress};
-use multitasking::scheduler::schedule_next_thread;
-use sync::Mutex;
+use crate::memory::{Address, VirtualAddress};
+use crate::multitasking::scheduler::schedule_next_thread;
+use crate::sync::Mutex;
 use x86_64::instructions::interrupts;
 use x86_64::instructions::port::{inb, outb};
 use x86_64::registers::control_regs;
@@ -122,8 +122,8 @@ extern "x86-interrupt" fn double_fault_handler(
     error!("DOUBLE FAULT!");
     error!("{:?}", stack_frame);
     error!("Error code: 0x{:x}", error_code);
-    use multitasking::{CURRENT_THREAD, TCB};
-    let tcb: &::sync::Mutex<TCB> = &CURRENT_THREAD;
+    use crate::multitasking::{CURRENT_THREAD, TCB};
+    let tcb: &crate::sync::Mutex<TCB> = &CURRENT_THREAD;
     error!("Running thread: {:?}", tcb);
     loop {}
 }
@@ -133,7 +133,7 @@ extern "x86-interrupt" fn page_fault_handler(
     stack_frame: &mut ExceptionStackFrame,
     _error_code: PageFaultErrorCode
 ) {
-    ::interrupts::page_fault_handler(
+    crate::interrupts::page_fault_handler(
         VirtualAddress::from_usize(control_regs::cr2().0),
         VirtualAddress::from_usize(stack_frame.instruction_pointer.0)
     );
@@ -156,7 +156,7 @@ extern "x86-interrupt" fn empty_handler(_: &mut ExceptionStackFrame) {}
 irq_interrupt!(
 /// The handler for the lapic timer interrupt.
 fn timer_handler {
-    ::interrupts::timer_interrupt();
+    crate::interrupts::timer_interrupt();
 });
 
 irq_interrupt!(
@@ -179,5 +179,5 @@ irq_interrupt!(
 fn irq1_handler {
     let scancode = unsafe { ::x86_64::instructions::port::inb(0x60) };
 
-    ::interrupts::keyboard_interrupt(scancode);
+    crate::interrupts::keyboard_interrupt(scancode);
 });

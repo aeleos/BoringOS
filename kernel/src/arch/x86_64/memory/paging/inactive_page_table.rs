@@ -8,8 +8,8 @@ use super::page_table_entry::*;
 use super::page_table_manager::PageTableManager;
 use super::PageFrame;
 use core::ptr::Unique;
-use memory::{Address, PhysicalAddress};
-use sync::PreemptionState;
+use crate::memory::{Address, PhysicalAddress};
+use crate::sync::PreemptionState;
 use x86_64::registers::control_regs::cr3;
 
 /// The reference to the place where the level 4 table will be mapped.

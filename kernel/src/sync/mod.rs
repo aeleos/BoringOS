@@ -4,7 +4,7 @@ pub mod mutex;
 pub mod time;
 
 pub use self::mutex::Mutex;
-use arch::{self, Architecture};
+use crate::arch::{self, Architecture};
 
 /// Saves the state when disabling preemtion, so it can be restored later.
 #[derive(Default)]

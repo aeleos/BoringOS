@@ -9,8 +9,8 @@ use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 use core::ptr;
 use core::ptr::Unique;
-use memory::{Address, PhysicalAddress, VirtualAddress};
-use sync::{Mutex, PreemptionState};
+use crate::memory::{Address, PhysicalAddress, VirtualAddress};
+use crate::sync::{Mutex, PreemptionState};
 use x86_64::instructions::tlb;
 use x86_64::registers::control_regs;
 

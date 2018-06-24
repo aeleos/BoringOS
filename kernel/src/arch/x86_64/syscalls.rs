@@ -1,7 +1,7 @@
 //! Serves to accept syscalls.
 
 use super::gdt::{USER_32BIT_CODE_SEGMENT, KERNEL_CODE_SEGMENT, TSS};
-use syscalls::syscall_handler;
+use crate::syscalls::syscall_handler;
 use x86_64::registers::flags::Flags;
 use x86_64::registers::msr::{wrmsr, IA32_FMASK, IA32_KERNEL_GS_BASE, IA32_LSTAR, IA32_STAR};
 

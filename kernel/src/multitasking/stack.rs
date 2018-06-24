@@ -1,11 +1,11 @@
 //! Provides functionality to manage multiple stacks.
 
-use arch::{self, Architecture};
+use crate::arch::{self, Architecture};
 use core::cmp::{max, min};
 use core::fmt;
 use core::mem::size_of;
-use memory::address_space::{AddressSpace, Segment, SegmentType};
-use memory::{MemoryArea, PageFlags, VirtualAddress};
+use crate::memory::address_space::{AddressSpace, Segment, SegmentType};
+use crate::memory::{MemoryArea, PageFlags, VirtualAddress};
 
 // NOTE: For now only full descending stacks are supported.
 /// Represents the different types of stacks that exist.

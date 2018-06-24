@@ -1,6 +1,6 @@
 //! Handles time related functionality.
 
-use arch::{self, Architecture};
+use crate::arch::{self, Architecture};
 use core::fmt;
 use core::ops;
 use core::time::Duration;

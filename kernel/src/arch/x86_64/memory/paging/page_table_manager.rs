@@ -5,8 +5,8 @@ use super::page_table::{Level1, Level2, Level4, PageTable};
 use super::page_table_entry::{PageTableEntry, PageTableEntryFlags};
 use super::{Page, PageFrame};
 use core::ops::{Deref, DerefMut};
-use memory::{Address, PhysicalAddress, VirtualAddress};
-use sync::PreemptionState;
+use crate::memory::{Address, PhysicalAddress, VirtualAddress};
+use crate::sync::PreemptionState;
 use x86_64::instructions::tlb;
 
 /// A reference to a locked level 1 page table.

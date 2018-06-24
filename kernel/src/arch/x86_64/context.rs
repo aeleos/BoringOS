@@ -2,12 +2,12 @@
 
 use super::gdt::{TSS, USER_CODE_SEGMENT, USER_DATA_SEGMENT};
 use super::interrupts::lapic;
-use arch;
+use crate::arch;
 use core::mem::size_of;
-use memory::address_space::AddressSpace;
-use memory::{Address, PhysicalAddress, VirtualAddress};
-use multitasking::scheduler::{after_context_switch, idle};
-use multitasking::Stack;
+use crate::memory::address_space::AddressSpace;
+use crate::memory::{Address, PhysicalAddress, VirtualAddress};
+use crate::multitasking::scheduler::{after_context_switch, idle};
+use crate::multitasking::Stack;
 use x86_64::registers::control_regs::cr3;
 use x86_64::structures::idt::ExceptionStackFrame;
 
@@ -166,7 +166,7 @@ pub unsafe fn switch_context(old_context: &mut Context, new_context: &Context) {
 
     let new_sp = new_context.kernel_stack_pointer;
     let new_bp = new_context.base_pointer;
-    let base_sp = ::multitasking::CURRENT_THREAD
+    let base_sp = crate::multitasking::CURRENT_THREAD
         .lock()
         .kernel_stack
         .base_stack_pointer;

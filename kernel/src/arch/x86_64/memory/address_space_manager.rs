@@ -10,11 +10,11 @@ use super::{
     USER_STACK_MAX_SIZE, USER_STACK_OFFSET,
 };
 use core::ptr;
-use memory::{
+use crate::memory::{
     address_space_manager, Address, AddressSpace, PageFlags, PhysicalAddress, VirtualAddress,
 };
-use multitasking::stack::AccessType;
-use multitasking::{Stack, ThreadID};
+use crate::multitasking::stack::AccessType;
+use crate::multitasking::{Stack, ThreadID};
 
 pub struct AddressSpaceManager {
     table: InactivePageTable,

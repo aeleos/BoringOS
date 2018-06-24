@@ -3,11 +3,11 @@
 use super::tcb::SleepTimeSortedTCB;
 use super::{ThreadState, TCB};
 use alloc::binary_heap::BinaryHeap;
-use arch::{self, schedule, Architecture};
+use crate::arch::{self, schedule, Architecture};
 use core::mem::swap;
-use sync::time::Timestamp;
-use sync::Mutex;
-use sync::{disable_preemption, enable_preemption, restore_preemption_state};
+use crate::sync::time::Timestamp;
+use crate::sync::Mutex;
+use crate::sync::{disable_preemption, enable_preemption, restore_preemption_state};
 use x86_64::instructions::halt;
 
 cpu_local! {

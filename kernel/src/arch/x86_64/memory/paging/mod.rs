@@ -13,7 +13,7 @@ use self::page_table_entry::*;
 use self::page_table_manager::PageTableManager;
 use super::*;
 use core::fmt;
-use memory::{Address, PageFlags, PhysicalAddress, VirtualAddress};
+use crate::memory::{Address, PageFlags, PhysicalAddress, VirtualAddress};
 
 /// Initializes the paging.
 pub fn init(initramfs_area: MemoryArea<PhysicalAddress>) {

@@ -22,11 +22,11 @@ use core::fmt;
 use core::fmt::Write;
 use core::time::Duration;
 use log::{set_logger, Level, Log, Metadata, Record};
-use memory::{Address, MemoryArea, PageFlags, PhysicalAddress, VirtualAddress};
-use multitasking::{StackType, CURRENT_THREAD};
+use crate::memory::{Address, MemoryArea, PageFlags, PhysicalAddress, VirtualAddress};
+use crate::multitasking::{StackType, CURRENT_THREAD};
 use raw_cpuid::CpuId;
-use sync::mutex::Mutex;
-use sync::time::Timestamp;
+use crate::sync::mutex::Mutex;
+use crate::sync::time::Timestamp;
 use x86_64::instructions::{rdmsr, wrmsr};
 use x86_64::registers::*;
 

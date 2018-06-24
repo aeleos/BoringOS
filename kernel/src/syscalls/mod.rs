@@ -1,12 +1,12 @@
 //! This module handles system calls.
 
-use arch::schedule;
+use crate::arch::schedule;
 use core::time::Duration;
-use elf;
-use memory::{Address, MemoryArea, VirtualAddress};
-use multitasking::scheduler::READY_LIST;
-use multitasking::{get_current_process, CURRENT_THREAD, TCB};
-use sync::time::Timestamp;
+use crate::elf;
+use crate::memory::{Address, MemoryArea, VirtualAddress};
+use crate::multitasking::scheduler::READY_LIST;
+use crate::multitasking::{get_current_process, CURRENT_THREAD, TCB};
+use crate::sync::time::Timestamp;
 
 /// This function accepts the syscalls and calls the corresponding handlers.
 pub fn syscall_handler(
@@ -157,7 +157,7 @@ fn sleep(seconds: usize, nanoseconds: usize) -> isize {
         get_current_process().kill_immediately();
     };
 
-    CURRENT_THREAD.lock().state = ::multitasking::ThreadState::Sleeping(wake_time);
+    CURRENT_THREAD.lock().state = crate::multitasking::ThreadState::Sleeping(wake_time);
     schedule();
     0
 }

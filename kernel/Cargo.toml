@@ -1,3 +1,6 @@
+
+cargo-features = ["edition"]
+
 [package]
 name = "veos"
 version = "0.1.0"
@@ -6,6 +9,7 @@ description = "An operating system kernel."
 readme = "README.md"
 keywords = ["OS", "operating", "system", "VeOS", "kernel"]
 license = "MIT"
+edition = '2018'
 
 [lib]
 crate-type = ["staticlib"]

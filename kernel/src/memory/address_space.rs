@@ -3,11 +3,11 @@
 use super::address_space_manager::AddressSpaceManager;
 use super::{PageFlags, PhysicalAddress, VirtualAddress};
 use alloc::Vec;
-use arch::{self, Architecture};
+use crate::arch::{self, Architecture};
 use core::mem::size_of_val;
 use core::slice;
-use memory::{MemoryArea, PAGE_SIZE};
-use multitasking::{Stack, ThreadID};
+use crate::memory::{MemoryArea, PAGE_SIZE};
+use crate::multitasking::{Stack, ThreadID};
 
 /// Represents an address space
 pub struct AddressSpace {

@@ -7,7 +7,7 @@ pub mod allocator;
 pub use self::address_space::AddressSpace;
 pub use self::address_space_manager::AddressSpaceManager;
 
-use arch::{self, Architecture};
+use crate::arch::{self, Architecture};
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
@@ -22,7 +22,7 @@ pub trait Address: PartialOrd + Ord + Add<usize, Output = Self> + Sized + Clone 
 
     /// Creates a value of the address type from a `usize`.
     #[inline(always)]
-    fn from_usize(usize) -> Self;
+    fn from_usize(_: usize) -> Self;
 
     /// Aligns the address to the next page border, rounded down.
     fn page_align_down(self) -> Self {

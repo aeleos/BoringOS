@@ -4,9 +4,9 @@
 //! They should instead
 //! be called by the architecture specific interrupt handlers.
 
-use arch::{self, schedule, Architecture};
-use memory::VirtualAddress;
-use multitasking::CURRENT_THREAD;
+use crate::arch::{self, schedule, Architecture};
+use crate::memory::VirtualAddress;
+use crate::multitasking::CURRENT_THREAD;
 
 /// The timer interrupt handler for the system.
 pub fn timer_interrupt() {
@@ -16,7 +16,7 @@ pub fn timer_interrupt() {
 /// The keyboard interrupt handler.
 pub fn keyboard_interrupt(scancode: u8) {
     if scancode == 1 {
-        unsafe { ::sync::disable_preemption() };
+        unsafe { crate::sync::disable_preemption() };
         loop {}
     }
     info!("Key: <{}>", scancode);
@@ -24,7 +24,7 @@ pub fn keyboard_interrupt(scancode: u8) {
 
 /// The page fault handler.
 pub fn page_fault_handler(address: VirtualAddress, program_counter: VirtualAddress) {
-    unsafe { ::sync::disable_preemption() };
+    unsafe { crate::sync::disable_preemption() };
     let current_thread = CURRENT_THREAD.lock();
 
     error!(

@@ -4,9 +4,9 @@ mod linked_list_allocator;
 
 use self::linked_list_allocator::LinkedListAllocator;
 use alloc::allocator::{GlobalAlloc, Layout};
-use arch::{self, Architecture};
-use memory::{Address, VirtualAddress};
-use sync::mutex::Mutex;
+use crate::arch::{self, Architecture};
+use crate::memory::{Address, VirtualAddress};
+use crate::sync::mutex::Mutex;
 
 pub struct Allocator;
 

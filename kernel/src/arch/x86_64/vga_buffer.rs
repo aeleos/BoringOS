@@ -3,11 +3,11 @@
 //! This module is used to handle IO with the basic VGA interface usually
 //! located at 0xb8000;
 
-use boot;
+use crate::boot;
 use core::fmt;
 use core::ptr::Unique;
-use memory::VirtualAddress;
-use sync::Mutex;
+use crate::memory::VirtualAddress;
+use crate::sync::Mutex;
 use volatile::Volatile;
 
 /// Represents a color in the buffer.

@@ -2,12 +2,12 @@
 
 use super::stack::AccessType;
 use super::{ProcessID, Stack, ThreadID, PCB, PROCESS_LIST};
-use arch::{self, Architecture};
+use crate::arch::{self, Architecture};
 use core::cmp::Ordering;
 use core::fmt;
 use core::time::Duration;
-use memory::{VirtualAddress, AddressSpaceManager};
-use sync::time::Timestamp;
+use crate::memory::{VirtualAddress, AddressSpaceManager};
+use crate::sync::time::Timestamp;
 
 /// Represents the possible states a thread can have.
 #[derive(Debug, PartialEq)]

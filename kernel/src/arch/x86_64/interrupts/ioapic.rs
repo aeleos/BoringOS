@@ -3,7 +3,7 @@
 use super::super::memory::map_page_at;
 use super::IRQ_INTERRUPT_NUMS;
 use core::fmt;
-use memory::{PageFlags, PhysicalAddress, VirtualAddress};
+use crate::memory::{PageFlags, PhysicalAddress, VirtualAddress};
 use x86_64::instructions::port::outb;
 
 /// The physical base address of the memory mapped I/O APIC.
@@ -137,7 +137,7 @@ impl IORedirectionEntry {
         // TODO: Don't use this ID here.
         register.set_destination(
             IORedirectionEntryFlags::PHYSICAL_DESTINATION_MODE,
-            ::multitasking::get_cpu_id() as u8
+            crate::multitasking::get_cpu_id() as u8
         );
 
         register

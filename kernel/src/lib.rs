@@ -60,10 +60,10 @@ mod syscalls;
 /// The name of the operating system.
 static OS_NAME: &'static str = "VeOS";
 
-use arch::Architecture;
-use boot::MultibootHeader;
+use crate::arch::Architecture;
+use crate::boot::MultibootHeader;
 use core::panic::PanicInfo;
-use memory::allocator::Allocator;
+use crate::memory::allocator::Allocator;
 /// Sets the current log level for the kernel.
 const LOG_LEVEL: log::LevelFilter = log::LevelFilter::Trace;
 

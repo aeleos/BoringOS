@@ -70,7 +70,7 @@ macro_rules! to_virtual {
 macro_rules! valid_address {
     ($address:expr) => {{
         if cfg!(arch = "x86_64") {
-            use arch::x86_64::memory::{VIRTUAL_HIGH_MIN_ADDRESS, VIRTUAL_LOW_MAX_ADDRESS};
+            use crate::arch::x86_64::memory::{VIRTUAL_HIGH_MIN_ADDRESS, VIRTUAL_LOW_MAX_ADDRESS};
             (VIRTUAL_LOW_MAX_ADDRESS >= $address || $address >= VIRTUAL_HIGH_MIN_ADDRESS)
         } else {
             true
@@ -98,9 +98,9 @@ macro_rules! __cpu_local_internal {
     ($(#[$attr: meta])*, pub, $wrapper_type: ident, $name: ident, $type: ty, $val: expr) => {
         lazy_static! {
             $(#[$attr])*
-            pub static ref $name: ::multitasking::$wrapper_type<$type> = {
+            pub static ref $name: crate::multitasking::$wrapper_type<$type> = {
                 use alloc::Vec;
-                use multitasking::get_cpu_num;
+                use crate::multitasking::get_cpu_num;
 
                 let cpu_num = get_cpu_num();
                 let mut vec = Vec::with_capacity(cpu_num);
@@ -110,7 +110,7 @@ macro_rules! __cpu_local_internal {
                 }
 
                 unsafe {
-                    ::multitasking::$wrapper_type::new(vec)
+                    crate::multitasking::$wrapper_type::new(vec)
                 }
             };
         }
@@ -118,9 +118,9 @@ macro_rules! __cpu_local_internal {
     ($(#[$attr: meta])*, $wrapper_type: ident, $name: ident, $type: ty, $val: expr) => {
         lazy_static! {
             $(#[$attr])*
-            static ref $name: ::multitasking::$wrapper_type<$type> = {
+            static ref $name: crate::multitasking::$wrapper_type<$type> = {
                 use alloc::Vec;
-                use multitasking::get_cpu_num;
+                use crate::multitasking::get_cpu_num;
 
                 let cpu_num = get_cpu_num();
                 let mut vec = Vec::with_capacity(cpu_num);
@@ -130,7 +130,7 @@ macro_rules! __cpu_local_internal {
                 }
 
                 unsafe {
-                    ::multitasking::$wrapper_type::new(vec)
+                    crate::multitasking::$wrapper_type::new(vec)
                 }
             };
         }

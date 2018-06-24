@@ -12,11 +12,11 @@ pub use self::scheduler::CURRENT_THREAD;
 pub use self::stack::{Stack, StackType};
 pub use self::tcb::{ThreadState, TCB};
 use alloc::btree_map::BTreeMap;
-use arch::{self, Architecture};
-use memory::address_space::AddressSpace;
-use memory::VirtualAddress;
-use sync::mutex::MutexGuard;
-use sync::Mutex;
+use crate::arch::{self, Architecture};
+use crate::memory::address_space::AddressSpace;
+use crate::memory::VirtualAddress;
+use crate::sync::mutex::MutexGuard;
+use crate::sync::Mutex;
 
 /// The type of a process ID.
 #[repr(transparent)]

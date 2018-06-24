@@ -3,7 +3,7 @@
 use super::free_list::{FreeListIterator, FREE_LIST};
 use super::{PageFrame, PAGE_SIZE};
 use core::cell::Cell;
-use memory::{oom, MemoryArea};
+use crate::memory::{oom, MemoryArea};
 
 /// Used to allocate page frames.
 pub struct FrameAllocator {

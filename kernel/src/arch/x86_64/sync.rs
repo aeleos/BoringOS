@@ -1,7 +1,7 @@
 //! Handles architecture specific synchronization.
 
 use core::time::Duration;
-use sync::time::Timestamp;
+use crate::sync::time::Timestamp;
 use x86_64::instructions::interrupts;
 use x86_64::registers::flags::*;
 

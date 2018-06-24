@@ -3,9 +3,9 @@
 
 use super::super::memory::map_page_at;
 use super::{IRQ8_INTERRUPT_TICKS, SPURIOUS_INTERRUPT_HANDLER_NUM, TIMER_INTERRUPT_HANDLER_NUM};
-use memory::{PageFlags, PhysicalAddress, VirtualAddress};
+use crate::memory::{PageFlags, PhysicalAddress, VirtualAddress};
 use raw_cpuid::CpuId;
-use sync::{disable_preemption, restore_preemption_state};
+use crate::sync::{disable_preemption, restore_preemption_state};
 use x86_64::instructions::interrupts;
 use x86_64::instructions::port::{inb, outb};
 

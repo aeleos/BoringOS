@@ -5,9 +5,9 @@ use super::memory::{
     FINAL_STACK_TOP
 };
 use core::mem::size_of;
-use memory::Address;
-use multitasking::stack::AccessType;
-use multitasking::Stack;
+use crate::memory::Address;
+use crate::multitasking::stack::AccessType;
+use crate::multitasking::Stack;
 use x86_64::instructions::segmentation::set_cs;
 use x86_64::instructions::tables::{lgdt, load_tss, DescriptorTablePointer};
 use x86_64::structures::gdt::SegmentSelector;

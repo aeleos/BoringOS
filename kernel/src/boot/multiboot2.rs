@@ -1,7 +1,7 @@
 //! Handles the multiboot2 information structure.
 
-use arch::vga_buffer;
-use memory::{Address, MemoryArea, PhysicalAddress, VirtualAddress};
+use crate::arch::vga_buffer;
+use crate::memory::{Address, MemoryArea, PhysicalAddress, VirtualAddress};
 use multiboot2;
 use spin::Once;
 
