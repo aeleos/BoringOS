@@ -1,7 +1,7 @@
 //! Provides the necessary types to handle CPU local values.
 
 use super::get_cpu_id;
-use alloc::Vec;
+use alloc::vec::Vec;
 use core::cell::UnsafeCell;
 use core::ops::Deref;
 

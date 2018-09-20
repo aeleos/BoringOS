@@ -99,7 +99,7 @@ macro_rules! __cpu_local_internal {
         lazy_static! {
             $(#[$attr])*
             pub static ref $name: ::multitasking::$wrapper_type<$type> = {
-                use alloc::Vec;
+                use alloc::vec::Vec;
                 use multitasking::get_cpu_num;
 
                 let cpu_num = get_cpu_num();
@@ -119,7 +119,7 @@ macro_rules! __cpu_local_internal {
         lazy_static! {
             $(#[$attr])*
             static ref $name: ::multitasking::$wrapper_type<$type> = {
-                use alloc::Vec;
+                use alloc::vec::Vec;
                 use multitasking::get_cpu_num;
 
                 let cpu_num = get_cpu_num();

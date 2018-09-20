@@ -62,7 +62,10 @@ static OS_NAME: &'static str = "VeOS";
 
 use arch::Architecture;
 use boot::MultibootHeader;
-use core::panic::PanicInfo;
+use core::{
+    panic::PanicInfo,
+    alloc::Layout,
+};
 use memory::allocator::Allocator;
 /// Sets the current log level for the kernel.
 const LOG_LEVEL: log::LevelFilter = log::LevelFilter::Trace;
@@ -131,7 +134,7 @@ pub extern "C" fn main(magic_number: u32, information_structure_address: usize) 
 /// this is not meant to be called manually anywhere,
 /// but through the panic! macro.
 #[cfg(not(test))]
-#[panic_implementation]
+#[panic_handler]
 #[no_mangle]
 pub extern "C" fn panic_fmt(info: &PanicInfo) -> ! {
     error!("{}", info);
@@ -148,6 +151,6 @@ pub extern "C" fn panic_fmt(info: &PanicInfo) -> ! {
 /// This is the required out of memory handler.
 #[lang = "oom"]
 #[no_mangle]
-pub extern "C" fn __rust_oom(_err: *const u8) -> ! {
+pub extern "C" fn __rust_oom(_err: Layout) -> ! {
     unimplemented!()
 }

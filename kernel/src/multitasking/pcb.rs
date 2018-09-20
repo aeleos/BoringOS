@@ -1,6 +1,6 @@
 //! This module defines a process control block (PCB).
 
-use alloc::BTreeMap;
+use alloc::collections::BTreeMap;
 use arch::schedule;
 use core::cmp::max;
 use core::ops::{Deref, DerefMut};

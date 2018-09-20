@@ -11,7 +11,7 @@ pub use self::pcb::{get_current_process, PCB};
 pub use self::scheduler::CURRENT_THREAD;
 pub use self::stack::{Stack, StackType};
 pub use self::tcb::{ThreadState, TCB};
-use alloc::btree_map::BTreeMap;
+use alloc::collections::BTreeMap;
 use arch::{self, Architecture};
 use memory::address_space::AddressSpace;
 use memory::VirtualAddress;

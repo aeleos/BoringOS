@@ -2,7 +2,7 @@
 
 use super::address_space_manager::AddressSpaceManager;
 use super::{PageFlags, PhysicalAddress, VirtualAddress};
-use alloc::Vec;
+use alloc::vec::Vec;
 use arch::{self, Architecture};
 use core::mem::size_of_val;
 use core::slice;

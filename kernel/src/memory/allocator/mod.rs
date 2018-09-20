@@ -3,7 +3,8 @@
 mod linked_list_allocator;
 
 use self::linked_list_allocator::LinkedListAllocator;
-use alloc::allocator::{GlobalAlloc, Layout};
+// use alloc::allocator::{GlobalAlloc, Layout};
+use core::alloc::{GlobalAlloc, Layout};
 use arch::{self, Architecture};
 use memory::{Address, VirtualAddress};
 use sync::mutex::Mutex;

@@ -30,7 +30,7 @@ run: $(ISO)
 
 .PHONY: run_debug
 run_debug: $(ISO)
-	qemu-system-x86_64 -cdrom $(ISO) $(QEMU_FLAGS) -d int
+	qemu-system-x86_64 -cdrom $(ISO) $(QEMU_FLAGS) -d int -no-reboot
 
 .PHONY: gdb
 gdb:

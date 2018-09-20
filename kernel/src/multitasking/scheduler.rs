@@ -2,7 +2,7 @@
 
 use super::tcb::SleepTimeSortedTCB;
 use super::{ThreadState, TCB};
-use alloc::binary_heap::BinaryHeap;
+use alloc::collections::BinaryHeap;
 use arch::{self, schedule, Architecture};
 use core::mem::swap;
 use sync::time::Timestamp;
